@@ -270,6 +270,6 @@ input {
 .selected {
     border: 2px dotted black;
 }
-.shape-btn {
+.shape-btn, .dot {
     transition: opacity 0.3s ease-in-out;
 }
