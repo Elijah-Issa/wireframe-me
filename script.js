@@ -46,6 +46,7 @@ document.addEventListener("touchstart", (e) => {
             wDot.style.pointerEvents = "none";
             hDot.style.opacity = "0";
             hDot.style.pointerEvents = "none";
+            editValues.classList.remove("show-edit-values");
         }
         
         shape = e.target.closest(".cont");
@@ -183,6 +184,7 @@ document.addEventListener("touchmove", (e) => {
         let dArr = path.getAttribute("d").split(" ");
         let x = Number(dArr[8]);
         let svgWidth = Number(svg.getAttribute("width"));
+        let vby = Number(svg.getAttribute("viewBox").split(" ")[3]);
             
         if (e.touches[0].clientX > initTouch.clientX) {
             x += 1;
@@ -193,16 +195,45 @@ document.addEventListener("touchmove", (e) => {
             svgWidth -= 1;
         }
         
-        let d = `M 0 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
+        let d = `M 25 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
        
         svg.setAttribute("width", svgWidth);
-        let vb = `0 0 ${svgWidth} 60`;
+        let vb = `25 0 ${svgWidth} ${vby}`;
         svg.setAttribute("viewBox", vb);
         
         path.setAttribute("d", d);
         
         widthInput.value = x;
     }
+    else if (e.target.matches(".h-dot") && shape.classList.contains("svg-cont")) {
+        let svg = shape.querySelector("svg");
+        let path = svg.querySelector("path");
+        let svgHeight = Number(svg.getAttribute("height"));
+        let svgWidth = Number(svg.getAttribute("width"));
+        let strokeWidth = Number(path.getAttribute("stroke-width"));
+        let vby = Number(svg.getAttribute("viewBox").split(" ")[3]);
+
+        if (e.touches[0].clientY > initTouch.clientY) {
+            strokeWidth += 1;
+            svgHeight += 1;
+            svgWidth += 1;
+            vby += 1;
+        }
+        if (e.touches[0].clientY < initTouch.clientY) {
+            strokeWidth -= 1;
+            svgHeight -= 1;
+            svgWidth -= 1;
+            vby -= 1;
+        }
+
+        let vb = `25 0 ${svgWidth} ${vby}`;
+
+        path.setAttribute("stroke-width", strokeWidth);
+        svg.setAttribute("height", svgHeight);
+        svg.setAttribute("width", svgWidth);
+        svg.setAttribute("viewBox", vb);
+    }
+
 });
 
 document.addEventListener("touchend", (e) => {
@@ -508,10 +539,10 @@ document.addEventListener("click", (e) => {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("width", "100");
         svg.setAttribute("height", "50");
-        svg.setAttribute("viewBox", "0 0 100 60");
+        svg.setAttribute("viewBox", "25 0 100 60");
         svg.style.pointerEvents = "none";
         
-        const d = "M 0 25 c 50 -25 50 25 100 0";
+        const d = "M 25 25 c 50 -25 50 25 100 0";
         
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         path.setAttribute("d", d);
@@ -554,6 +585,8 @@ document.addEventListener("click", (e) => {
             const he = shape.querySelector("svg").getAttribute("height");
             const le = shape.style.left.slice(0, shape.style.left.indexOf("p"));
             const to = shape.style.top.slice(0, shape.style.top.indexOf("p"));
+            const strokeWidth = Number(shape.querySelector("path").getAttribute("stroke-width"));
+            const vby = shape.querySelector("svg").getAttribute("viewBox").split(" ")[3];
 
             const cont = document.createElement("div");
             cont.className = "svg-cont svg";
@@ -621,15 +654,15 @@ document.addEventListener("click", (e) => {
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("width", `${Number(wi)}`);
             svg.setAttribute("height", `${Number(he)}`);
-            svg.setAttribute("viewBox", `0 0 ${wi} 60`);
+            svg.setAttribute("viewBox", `25 0 ${wi} ${Number(vby)}`);
             svg.style.pointerEvents = "none";
             
-            let d = `M 0 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
+            let d = `M 25 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
             
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.setAttribute("d", d);
             path.setAttribute("stroke", "black");
-            path.setAttribute("stroke-width", "5");
+            path.setAttribute("stroke-width", strokeWidth);
             path.setAttribute("fill", "none");
             path.setAttribute("stroke-linecap", "round");
             path.style.pointerEvents = "none";
@@ -717,7 +750,6 @@ document.addEventListener("click", (e) => {
             rect.style.border = "2px solid black";
             rect.style.width = `${Number(wi)}px`;
             rect.style.height = `${Number(he)}px`;
-            //rect.style.position = "absolute";
             rect.style.left = `${clientX}px`;
             rect.style.top = `${clientY}px`;
             rect.style.borderRadius = "8px";
