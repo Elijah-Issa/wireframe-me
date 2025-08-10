@@ -9,28 +9,53 @@ body {
 
 
 
-.create-drawer .content {
+/* .create-drawer .content {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: 50px;
     gap: 1rem;
     width: 100%;
     height: 80%;
-}
-.create-drawer {
-    user-select: none;
+} */
+.tools-drawer {
     padding: 1rem;
     position: fixed;
-    bottom: -80%;
-    height: 80%;
-    width: 100%;
+    top: .5rem;
+    left: 7.5%;
+    height: 5rem;
+    width: 85%;
     box-sizing: border-box;
-    left: 0;
-    transition: bottom 0.3s ease-in-out, opacity 0.5s ease-in-out;
-    backdrop-filter: blur(8px);
+    transition: top 0.3s ease-in-out, opacity 0.5s ease-in-out;
+    border-radius: 8px;
     z-index: 1000;
-    background-color: rgba(30, 30, 30, 0.4);
-    opacity: 0.5;
+    background-color: blueviolet;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 1.5rem;
+    color: white;
+
+}
+.create-drawer {
+    padding: 1rem;
+    position: fixed;
+    top: 1rem;
+    left: 7.5%;
+    height: 4rem;
+    width: 40%;
+    box-sizing: border-box;
+    transition: top 0.2s ease-in-out, opacity 0.5s ease-in-out;
+    border-radius: 8px;
+    z-index: 999;
+    background-color: blueviolet;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 1.5rem;
+    color: white;
+    box-sizing: border-box;
 }
 .show-cr-drawer {
     bottom: 0;
@@ -53,26 +78,37 @@ body {
     height: 25px;
     box-sizing: border-box;
 }
-.show-create-dr-btn {
+/* .show-create-dr-btn {
     transform: rotateZ(-90deg);
     transition: transform 0.3s ease-in-out;
+} */
+.sh {
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
 }
-.rotate-btn {
+.tl {
+    padding: 0.7rem 1.2rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+
+}
+/* .rotate-btn {
     transform: rotateZ(90deg);
-}
-.x {
+} */
+/* .x {
     position: absolute;
     right: 15px;
     top: 2px;
-}
-.create-drawer .content > * {
+} */
+/* .create-drawer .content > * {
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: blueviolet;
     color: white;
     border-radius: 8px;
-}
+} */
 
 
 

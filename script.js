@@ -1,3 +1,5 @@
+const tlDrawer = document.querySelector(".tools-drawer");
+
 const crDrawer = document.querySelector(".create-drawer");
 const crDrBtn = document.querySelector(".show-create-dr-btn");
 
@@ -9,11 +11,13 @@ const heightInput = document.querySelector(".height-input");
 
 
 
+
 let shape;
 let clientX, clientY;
 let relXPos, relYPos;
 let initTouch;
 let differenceTouch = 0;
+let state = "idle";
 document.addEventListener("touchstart", (e) => {
     if (e.target.matches(".shape")) {
         const cont = e.target.closest(".cont");
@@ -155,32 +159,18 @@ document.addEventListener("touchmove", (e) => {
         let normX = Number(actShape.style.width.slice(0, actShape.style.width.indexOf("p")));
         let normY = Number(actShape.style.height.slice(0, actShape.style.height.indexOf("p")));
         
-        // if (e.touches[0].clientX > initTouch.clientX) {
         normX += e.touches[0].clientX - differenceTouch.w;
-        // }
-        // if (e.touches[0].clientX < initTouch.clientX) {
-            // normX -= e.touches[0].clientX - differenceTouch.w;
-        // }
-        // if (shape.tagName == "DIV") {
         actShape.style.width = `${normX}px`;
         widthInput.value = normX;
-        // }
     }
     else if (e.target.matches(".h-dot") && !shape.classList.contains("svg-cont")) {
         const cont = e.target.closest(".cont");
         const actShape = cont.querySelector(".shape");
         let normY = Number(actShape.style.height.slice(0, actShape.style.height.indexOf("p")));
         
-        // if (e.touches[0].clientY > initTouch.clientY) {
         normY += e.touches[0].clientY - differenceTouch.h;
-        // }
-        // if (e.touches[0].clientY < initTouch.clientY) {
-        // normY -= e.touches[0].clientY - differenceTouch.h;
-        // }
-        // if (shape.tagName == "DIV") {
         actShape.style.height = `${normY}px`;
         heightInput.value = normY;
-        // }
     }
     else if (e.target.matches(".w-dot") && shape.classList.contains("svg-cont")) {
         let path = shape.querySelector("path");
@@ -190,18 +180,9 @@ document.addEventListener("touchmove", (e) => {
         let svgWidth = Number(svg.getAttribute("width"));
         let vby = Number(svg.getAttribute("viewBox").split(" ")[3]);
             
-        // if (e.touches[0].clientX > initTouch.clientX) {
         x += e.touches[0].clientX - differenceTouch.w;
-        // x += 1;
         svgWidth += e.touches[0].clientX - differenceTouch.w;
-        // }
-        // if (e.touches[0].clientX < initTouch.clientX) {
-            // x -= 1;
-            // x += e.touches[0].clientX - differenceTouch.w;
-            // svgWidth += e.touches[0].clientX - differenceTouch.w;
-            // svgWidth -= 1;
-        // }
-        
+
         let d = `M 25 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
        
         svg.setAttribute("width", svgWidth);
@@ -220,19 +201,10 @@ document.addEventListener("touchmove", (e) => {
         let strokeWidth = Number(path.getAttribute("stroke-width"));
         let vby = Number(svg.getAttribute("viewBox").split(" ")[3]);
 
-        // if (e.touches[0].clientY > initTouch.clientY) {
-        // x += e.touches[0].clientY - differenceTouch.h;
         strokeWidth += e.touches[0].clientY - differenceTouch.h;
         svgHeight += e.touches[0].clientY - differenceTouch.h;
         // svgWidth += (e.touches[0].clientY - differenceTouch.h) + 1;
         vby += e.touches[0].clientY - differenceTouch.h;
-        // }
-        // if (e.touches[0].clientY < initTouch.clientY) {
-        //     strokeWidth -= 1;
-        //     svgHeight -= 1;
-        //     svgWidth -= 1;
-        //     vby -= 1;
-        // }
 
         let vb = `25 0 ${svgWidth} ${svgHeight}`;
 
@@ -860,6 +832,12 @@ document.addEventListener("click", (e) => {
             document.body.appendChild(cont);
         }
     }
+    else if (e.target.matches(".create-tool")) crDrawer.style.top = "6rem"
+    else if (e.target.matches(".hide-btn")) crDrawer.style.top = "1rem";
+    // else if (e.target.matches(".hide-tool")) {
+    //     tlDrawer.style.top = "-6rem";
+    //     crDrawer.style.top = "-6rem";
+    // }
 });
 
 
