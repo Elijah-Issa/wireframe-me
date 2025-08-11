@@ -249,10 +249,9 @@ document.addEventListener("click", (e) => {
         shape &&
         !e.target.matches(".svg-cont") &&
         !e.target.matches(".shape") &&
-        !e.target.matches(".show-create-dr-btn") &&
-        !e.target.matches(".dr-btn-bg") &&
-        !e.target.matches(".cr-cr") &&
-        !e.target.matches(".shape-btn")
+        !e.target.matches(".sh") &&
+        !e.target.matches(".shape-btn") &&
+        !e.target.matches(".create-tool")
     ) {
         shape.classList.remove("selected");
         const delBtn = shape.querySelector(".del-btn");
@@ -303,6 +302,12 @@ document.addEventListener("click", (e) => {
         cont.style.width = "fit-content";
         cont.style.height = "fit-content";
         cont.style.position = "absolute";
+        // cont.setAttribute("dataset-is-locked", "false");
+
+        // const lock = document.createAttribute("div");
+        // lock.className = "lock";
+        // lock.innerText = "Lock";
+        // lock.style.position = "absolute";
         
         const wDot = document.createElement("div");
         wDot.className = "w-dot dot";
@@ -339,7 +344,7 @@ document.addEventListener("click", (e) => {
         delBtn.style.color = "white";
         delBtn.style.padding = "0.3rem 0.5rem";
         delBtn.style.position = "absolute";
-        delBtn.style.left = "10%";
+        delBtn.style.left = "1rem";
         delBtn.style.top = "-1.5rem";
         delBtn.innerText = "Delete";
         delBtn.style.opacity = "0";
@@ -352,7 +357,7 @@ document.addEventListener("click", (e) => {
         cpyBtn.style.color = "white";
         cpyBtn.style.padding = "0.3rem 0.5rem";
         cpyBtn.style.position = "absolute";
-        cpyBtn.style.right = "10%";
+        cpyBtn.style.left = "5rem";
         cpyBtn.style.top = "-1.5rem";
         cpyBtn.innerText = "Copy";
         cpyBtn.style.opacity = "0";
@@ -419,7 +424,7 @@ document.addEventListener("click", (e) => {
         delBtn.style.color = "white";
         delBtn.style.padding = "0.3rem 0.5rem";
         delBtn.style.position = "absolute";
-        delBtn.style.left = "10%";
+        delBtn.style.left = "1rem";
         delBtn.style.top = "-1.5rem";
         delBtn.innerText = "Delete";
         delBtn.style.opacity = "0";
@@ -432,7 +437,7 @@ document.addEventListener("click", (e) => {
         cpyBtn.style.color = "white";
         cpyBtn.style.padding = "0.3rem 0.5rem";
         cpyBtn.style.position = "absolute";
-        cpyBtn.style.right = "10%";
+        cpyBtn.style.left = "5rem";
         cpyBtn.style.top = "-1.5rem";
         cpyBtn.innerText = "Copy";
         cpyBtn.style.opacity = "0";
@@ -500,7 +505,7 @@ document.addEventListener("click", (e) => {
         delBtn.style.color = "white";
         delBtn.style.padding = "0.3rem 0.5rem";
         delBtn.style.position = "absolute";
-        delBtn.style.left = "10%";
+        delBtn.style.left = "1rem";
         delBtn.style.top = "-1.5rem";
         delBtn.innerText = "Delete";
         delBtn.style.opacity = "0";
@@ -513,7 +518,7 @@ document.addEventListener("click", (e) => {
         cpyBtn.style.color = "white";
         cpyBtn.style.padding = "0.3rem 0.5rem";
         cpyBtn.style.position = "absolute";
-        cpyBtn.style.right = "10%";
+        cpyBtn.style.left = "5rem";
         cpyBtn.style.top = "-1.5rem";
         cpyBtn.innerText = "Copy";
         cpyBtn.style.opacity = "0";
