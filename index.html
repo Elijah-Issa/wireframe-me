@@ -8,7 +8,7 @@
 
     <body>
         
-        <div class="tools-drawer">
+        <!-- <div class="tools-drawer">
             <div class="create-tool tl">Create</div>
             <div class="lasso-tool tl">Lasso</div>
             <div class="menu-tool tl">Menu</div>
@@ -16,19 +16,62 @@
         </div>
 
         <div class="create-drawer">
-            <!-- <div class="dr-btn-bg"><span class="show-create-dr-btn">></span></span></div> -->
-            <!-- <div class="content"> -->
             <div class="rect-btn sh">Rect</div>
             <div class="circle-btn sh">Circle</div>
             <div class="text-btn sh">Text</div>
             <div class="hide-btn sh">^</div>
-            <!-- </div> -->
+        </div> -->
+
+        <div id="toolbar">
+            <!-- Rectangle -->
+            <button class="tool rect-btn shape-btn" data-name="Rectangle">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18"/></svg>
+            </button>
+
+            <!-- Circle -->
+            <button class="tool circle-btn shape-btn" data-name="Circle">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>
+            </button>
+
+            <!-- Text -->
+            <button class="tool text-btn shape-btn" data-name="Text">
+                <svg viewBox="0 0 24 24"><path d="M8 5h8M12 5v14m-4 0h8"/></svg>
+            </button>
+
+            <!-- Line -->
+            <button class="tool line-btn shape-btn" data-name="Line">
+                <svg viewBox="0 0 24 24"><line x1="3" y1="21" x2="21" y2="3"/></svg>
+            </button>
+
+            <!-- Comment -->
+            <button class="tool comment-btn shape-btn" data-name="Comment">
+                <svg viewBox="0 0 24 24">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7
+                            8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8
+                            8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/>
+                </svg>
+            </button>
+
+            <!-- Lasso -->
+            <button class="tool lasso-btn shape-btn" data-name="Lasso">
+                <svg viewBox="0 0 24 24">
+                    <path d="M4.5 9.5C4.5 4.5 9.5 4 11.5 6c2 2 1 7 6 7s4-5 2-7-7-4-10 1"/>
+                </svg>
+            </button>
+
+            <!-- Pan – crisp hand -->
+            <button class="tool pan-btn shape-btn" data-name="Pan">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2c2.2 0 4 1.8 4 4v1.5c.6.3 1 .9 1 1.5 0 .8-.6 1.4-1.3 1.5l.3 6.5c.1 1.1-.8 2-1.9 2h-1.5c-1.1 0-2-.9-1.9-2l.3-6.5c-.7-.1-1.3-.7-1.3-1.5 0-.6.4-1.2 1-1.5V6c0-2.2 1.8-4 4-4z
+                        M9 20h6l-1 3h-4l-1-3z"/>
+                </svg>
+            </button>
         </div>
         
-        <div class="edit-values">
+        <!-- <div class="edit-values">
             <input class="width-input" type="number" placeholder="Width ?" />
             <input class="height-input" type="number" placeholder="Height ?" />
-        </div>
+        </div> -->
         
 
         <script src="./script.js"></script>
