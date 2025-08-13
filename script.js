@@ -9,6 +9,7 @@ let outerTempShape = null;
 document.addEventListener("touchstart", (e) => {
     if (
         state != "pan" &&
+        state != "text" &&
         !e.target.matches("#toolbar") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
@@ -34,8 +35,42 @@ document.addEventListener("touchstart", (e) => {
         });
         document.body.appendChild(outerTempShape);
     }
+    else if (
+        state != "pan" &&
+        state == "text" &&
+        !e.target.matches("#toolbar") &&
+        !e.target.matches(".shape-btn") &&
+        !e.target.matches(".shape-btn svg")
+    ) {
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
 
-    if (e.target.matches(".shape") && state == "pan") {
+        const outerTempShape = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        outerTempShape.style.positionj = "absolute";
+        outerTempShape.style.left = `${startX}px`;
+        outerTempShape.style.top = `${startY}px`;
+        outerTempShape.setAttribute("width", "0");
+        outerTempShape.setAttribute("height", "0");
+        outerTempShape.setAttribute("viewBox", "25 0 0 0");
+
+        const d = "M 25 25";
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("stroke-width", "0");
+        path.setAttribute("stroke", "black");
+        path.setAttribute("d", d);
+        path.setAttribute("stroke", "black");
+        path.setAttribute("stroke-width", "5");
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke-linecap", "round");
+
+        outerTempShape.appendChild(path);
+
+        document.body.appendChild(outerTempShape);
+    }
+
+    else if (e.target.matches(".shape") && state == "pan") {
         const cont = e.target.closest(".cont");
         // const delBtn = cont.querySelector(".del-btn");
         // const cpyBtn = cont.querySelector(".cpy-btn");
@@ -136,6 +171,7 @@ document.addEventListener("touchstart", (e) => {
 document.addEventListener("touchmove", (e) => {
     if (
         state != "pan" &&
+        state != "text" &&
         !e.target.matches("#toolbar") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
@@ -147,6 +183,26 @@ document.addEventListener("touchmove", (e) => {
         // assign new values, don’t append strings
         outerTempShape.style.width  = `${Math.abs(ww)}px`;
         outerTempShape.style.height = `${Math.abs(hh)}px`;
+        
+        // keep the top-left corner fixed when dragging left/up
+        if (ww < 0) outerTempShape.style.left = `${touch.clientX}px`;
+        if (hh < 0) outerTempShape.style.top  = `${touch.clientY}px`;
+    }
+    else if (
+        state != "pan" &&
+        state == "text" &&
+        !e.target.matches("#toolbar") &&
+        !e.target.matches(".shape-btn") &&
+        !e.target.matches(".shape-btn svg")
+    ) {
+        const touch = e.touches[0];
+        const ww = touch.clientX - startX;
+        const hh = touch.clientY - startY;
+
+        // assign new values, don’t append strings
+        console.log("svg Element", outerTempShape.querySelector("path"));
+        // outerTempShape.style.width  = `${Math.abs(ww)}px`;
+        // outerTempShape.style.height = `${Math.abs(hh)}px`;
         
         // keep the top-left corner fixed when dragging left/up
         if (ww < 0) outerTempShape.style.left = `${touch.clientX}px`;
@@ -167,38 +223,6 @@ document.addEventListener("touchmove", (e) => {
         shape.style.left = `${xPos}px`;
         shape.style.top = `${yPos}px`;
     }
-    // else if (e.target.matches("svg") && state == "move") {
-    //     const touch = e.touches[0] || e.changedTouches[0];
-    //     let xPos = touch.clientX - relXPos;
-    //     let yPos = touch.clientY - relYPos;
-    //     e.target.style.left = `${xPos}px`;
-    //     e.target.style.top = `${yPos}px`;
-    // }
-    // else if (e.target.matches("svg") && state == "edit") {
-    //     let path = shape.querySelector("path");
-    //     let dArr = path.getAttribute("d").split(" ");
-    //     let x = Number(dArr[8]);
-    //     let svgWidth = Number(shape.getAttribute("width"));
-            
-    //     if (e.touches[0].clientX > initTouch.clientX && !lockX) {
-    //         x += 1;
-    //         svgWidth += 1;
-    //     }
-    //     if (e.touches[0].clientX < initTouch.clientX && !lockX) {
-    //         x -= 1;
-    //         svgWidth -= 1;
-    //     }
-        
-    //     let d = `M 0 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
-       
-    //     shape.setAttribute("width", svgWidth);
-    //     let vb = `0 0 ${svgWidth} 60`;    
-    //     shape.setAttribute("viewBox", vb);
-        
-    //     path.setAttribute("d", d);
-        
-    //     widthInput.value = x;
-    // }
     
     else if (e.target.matches(".w-dot") && !shape.classList.contains("svg-cont") && state == "pan") {
         const cont = e.target.closest(".cont");
