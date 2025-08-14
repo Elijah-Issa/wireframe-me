@@ -3,13 +3,14 @@ let clientX, clientY;
 let relXPos, relYPos;
 let initTouch;
 let differenceTouch = 0;
-let state = "pan";
+let state = "Pan";
 let startX, startY;      // where the touch started
 let outerTempShape = null;
+
 document.addEventListener("touchstart", (e) => {
     if (
-        state != "pan" &&
-        state != "text" &&
+        state == "Rectangle" ||
+        state == "Circle" &&
         !e.target.matches("#toolbar") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
@@ -19,8 +20,8 @@ document.addEventListener("touchstart", (e) => {
         startY = touch.clientY;
 
         let borderRad = 0;
-        if (state == "circle") borderRad = "10rem";
-        else if (state == "rect") borderRad = "8px";
+        if (state == "Circle") borderRad = "10rem";
+        else if (state == "Rectangle") borderRad = "8px";
         
         outerTempShape = document.createElement('div');
         outerTempShape.className = 'temp-shape';
@@ -31,13 +32,13 @@ document.addEventListener("touchstart", (e) => {
             border: '2px dotted black',
             borderRadius: borderRad,
             width: '0px',
-            height: '0px'
+            height: '0px',
+            zIndex: "999",
         });
         document.body.appendChild(outerTempShape);
     }
     else if (
-        state != "pan" &&
-        state == "text" &&
+        state == "Text" &&
         !e.target.matches("#toolbar") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
@@ -46,13 +47,23 @@ document.addEventListener("touchstart", (e) => {
         startX = touch.clientX;
         startY = touch.clientY;
 
-        const outerTempShape = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        outerTempShape.style.positionj = "absolute";
-        outerTempShape.style.left = `${startX}px`;
-        outerTempShape.style.top = `${startY}px`;
-        outerTempShape.setAttribute("width", "0");
-        outerTempShape.setAttribute("height", "0");
-        outerTempShape.setAttribute("viewBox", "25 0 0 0");
+        outerTempShape = document.createElement("div");
+        Object.assign({
+            position: "absolute",
+            left: `${startX}px`,
+            top: `${startY}px`,
+            width: "0",
+            height: "0",
+            borderRadius: "2px dotted black",
+        });
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.style.positionj = "absolute";
+        svg.style.left = `${startX}px`;
+        svg.style.top = `${startY}px`;
+        svg.setAttribute("width", "0");
+        svg.setAttribute("height", "0");
+        svg.setAttribute("viewBox", "25 0 0 0");
 
         const d = "M 25 25";
 
@@ -65,12 +76,40 @@ document.addEventListener("touchstart", (e) => {
         path.setAttribute("fill", "none");
         path.setAttribute("stroke-linecap", "round");
 
-        outerTempShape.appendChild(path);
+        svg.appendChild(path);
+        outerTempShape.appendChild(svg);
 
         document.body.appendChild(outerTempShape);
     }
 
     else if (e.target.matches(".shape") && state == "pan") {
+        outerTempShape = document.createElement("div");
+        outerTempShape.style.position = "absolute";
+        outerTempShape.style.left = `${startX}`;
+        outerTempShape.style.top = `${startY}`;
+        outerTempShape.style.width = "fit-content";
+        outerTempShape.style.height = "fit-content";
+        
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", "0");
+        svg.setAttribute("height", "0");
+        svg.setAttribute("viewBox", "25 0 0 0");
+
+        const d = "M 25 25";
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", d);
+        path.setAttribute("stroke", "black");
+        path.setAttribute("stroke-width", "0");
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke-linecap", "round");
+
+        svg.appendChild(path);
+        outerTempShape.appendChild(svg);
+        document.body.appendChild(outerTempShape);
+    }
+
+    else if (e.target.matches(".shape") && state == "Pan") {
         const cont = e.target.closest(".cont");
         // const delBtn = cont.querySelector(".del-btn");
         // const cpyBtn = cont.querySelector(".cpy-btn");
@@ -115,7 +154,7 @@ document.addEventListener("touchstart", (e) => {
         shape = e.target.closest(".cont");
         // cont.classList.add("selected");
     }
-    else if (e.target.matches(".svg-cont") && state == "pan") {
+    else if (e.target.matches(".svg-cont") && state == "Pan") {
         const cont = e.target;
         // const delBtn = cont.querySelector(".del-btn");
         // const cpyBtn = cont.querySelector(".cpy-btn");
@@ -170,8 +209,8 @@ document.addEventListener("touchstart", (e) => {
 // let normDx = 0;
 document.addEventListener("touchmove", (e) => {
     if (
-        state != "pan" &&
-        state != "text" &&
+        state == "Rectangle" ||
+        state == "Circle" &&
         !e.target.matches("#toolbar") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
@@ -189,42 +228,85 @@ document.addEventListener("touchmove", (e) => {
         if (hh < 0) outerTempShape.style.top  = `${touch.clientY}px`;
     }
     else if (
-        state != "pan" &&
-        state == "text" &&
+        state == "Text" &&
         !e.target.matches("#toolbar") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
     ) {
         const touch = e.touches[0];
-        const ww = touch.clientX - startX;
-        const hh = touch.clientY - startY;
 
-        // assign new values, don’t append strings
-        console.log("svg Element", outerTempShape.querySelector("path"));
-        // outerTempShape.style.width  = `${Math.abs(ww)}px`;
-        // outerTempShape.style.height = `${Math.abs(hh)}px`;
-        
         // keep the top-left corner fixed when dragging left/up
-        if (ww < 0) outerTempShape.style.left = `${touch.clientX}px`;
-        if (hh < 0) outerTempShape.style.top  = `${touch.clientY}px`;
+        // if (ww < 0) outerTempShape.style.left = `${touch.clientX}px`;
+        // if (hh < 0) outerTempShape.style.top  = `${touch.clientY}px`;
+
+        let svg = outerTempShape.querySelector("svg");
+        let path = svg.querySelector("path");
+        let dArr = path.getAttribute("d").split(" ");
+        let x = Number(dArr[8]);
+        let svgWidth = Number(svg.getAttribute("width"));
+        let vby = Number(svg.getAttribute("viewBox").split(" ")[3]);
+            
+        x = touch.clientX - startX;
+        svgWidth += touch.clientX - startX;
+        vby = touch.clientX - startX;
+
+        let d = `M 25 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
+       
+        svg.setAttribute("width", svgWidth);
+        let vb = `25 0 ${svgWidth} ${vby}`;
+        svg.setAttribute("viewBox", vb);
+        
+        path.setAttribute("d", d);
     }
     
-    else if (e.target.matches(".shape") && state == "pan") {
+    else if (e.target.matches(".shape") && state == "Pan") {
         const touch = e.touches[0] || e.changedTouches[0];
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
         shape.style.left = `${xPos}px`;
         shape.style.top = `${yPos}px`;
     }
-    else if (e.target.matches(".svg-cont") && state == "pan") {
+    else if (e.target.matches(".svg-cont") && state == "Pan") {
         const touch = e.touches[0] || e.changedTouches[0];
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
         shape.style.left = `${xPos}px`;
         shape.style.top = `${yPos}px`;
     }
+    // else if (e.target.matches("svg") && state == "move") {
+    //     const touch = e.touches[0] || e.changedTouches[0];
+    //     let xPos = touch.clientX - relXPos;
+    //     let yPos = touch.clientY - relYPos;
+    //     e.target.style.left = `${xPos}px`;
+    //     e.target.style.top = `${yPos}px`;
+    // }
+    // else if (e.target.matches("svg") && state == "edit") {
+    //     let path = shape.querySelector("path");
+    //     let dArr = path.getAttribute("d").split(" ");
+    //  `   let x = Number(dArr[8]);
+    //     let svgWidth = Number(shape.getAttribute("width"));
+            
+    //     if (e.touches[0].clientX > initTouch.clientX && !lockX) {
+    //         x += 1;
+    //         svgWidth += 1;
+    //     }
+    //     if (e.touches[0].clientX < initTouch.clientX && !lockX) {
+    //         x -= 1;
+    //         svgWidth -= 1;
+    //     }
+        
+    //     let d = `M 0 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
+       
+    //     shape.setAttribute("width", svgWidth);
+    //     let vb = `0 0 ${svgWidth} 60`;    
+    //     shape.setAttribute("viewBox", vb);
+        
+    //     path.setAttribute("d", d);
+        
+    //     widthInput.value = x;
+    // }
     
-    else if (e.target.matches(".w-dot") && !shape.classList.contains("svg-cont") && state == "pan") {
+    else if (e.target.matches(".w-dot") && !shape.classList.contains("svg-cont") && state == "Pan") {
         const cont = e.target.closest(".cont");
         const actShape = cont.querySelector(".shape");
         let normX = Number(actShape.style.width.slice(0, actShape.style.width.indexOf("p")));
@@ -232,7 +314,7 @@ document.addEventListener("touchmove", (e) => {
         normX += e.touches[0].clientX - differenceTouch.w;
         actShape.style.width = `${normX}px`;
     }
-    else if (e.target.matches(".h-dot") && !shape.classList.contains("svg-cont") && state == "pan") {
+    else if (e.target.matches(".h-dot") && !shape.classList.contains("svg-cont") && state == "Pan") {
         const cont = e.target.closest(".cont");
         const actShape = cont.querySelector(".shape");
         let normY = Number(actShape.style.height.slice(0, actShape.style.height.indexOf("p")));
@@ -240,7 +322,7 @@ document.addEventListener("touchmove", (e) => {
         normY += e.touches[0].clientY - differenceTouch.h;
         actShape.style.height = `${normY}px`;
     }
-    else if (e.target.matches(".w-h-dot") && !shape.classList.contains("svg-cont") && state == "pan") {
+    else if (e.target.matches(".w-h-dot") && !shape.classList.contains("svg-cont") && state == "Pan") {
         const cont = e.target.closest(".cont");
         const actShape = cont.querySelector(".shape");
         let normX = Number(actShape.style.width.slice(0, actShape.style.width.indexOf("p")));
@@ -251,7 +333,7 @@ document.addEventListener("touchmove", (e) => {
         actShape.style.width = `${normX}px`;
         actShape.style.height = `${normY}px`;
     }
-    else if (e.target.matches(".w-dot") && shape.classList.contains("svg-cont") && state == "pan") {
+    else if (e.target.matches(".w-dot") && shape.classList.contains("svg-cont") && state == "Pan") {
         let path = shape.querySelector("path");
         let svg = shape.querySelector("svg");
         let dArr = path.getAttribute("d").split(" ");
@@ -269,10 +351,8 @@ document.addEventListener("touchmove", (e) => {
         svg.setAttribute("viewBox", vb);
         
         path.setAttribute("d", d);
-        
-        widthInput.value = x;
     }
-    else if (e.target.matches(".h-dot") && shape.classList.contains("svg-cont") && state == "pan") {
+    else if (e.target.matches(".h-dot") && shape.classList.contains("svg-cont") && state == "Pan") {
         let svg = shape.querySelector("svg");
         let path = svg.querySelector("path");
         let svgHeight = Number(svg.getAttribute("height"));
@@ -300,8 +380,8 @@ document.addEventListener("touchmove", (e) => {
 
 document.addEventListener("touchend", (e) => {
     if (
-        state != "pan" &&
-        state == "rect" &&
+        state != "Pan" &&
+        state == "Rectangle" &&
         !e.target.matches("#toolbar") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
@@ -309,12 +389,10 @@ document.addEventListener("touchend", (e) => {
         const tempShapeWidth = outerTempShape.style.width.slice(0, outerTempShape.style.width.indexOf("p"));
         const tempShapeHeight = outerTempShape.style.height.slice(0, outerTempShape.style.height.indexOf("p"));
         createRect(e=e, width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
-        outerTempShape.remove();
-        outerTempShape = null;
     }
-    if (
-        state != "pan" &&
-        state == "circle" &&
+    else if (
+        state != "Pan" &&
+        state == "Circle" &&
         !e.target.matches("#toolbar") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
@@ -322,6 +400,8 @@ document.addEventListener("touchend", (e) => {
         const tempShapeWidth = outerTempShape.style.width.slice(0, outerTempShape.style.width.indexOf("p"));
         const tempShapeHeight = outerTempShape.style.height.slice(0, outerTempShape.style.height.indexOf("p"));
         createCircle(e=e, width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
+    }
+    if (outerTempShape) {
         outerTempShape.remove();
         outerTempShape = null;
     }
@@ -407,10 +487,10 @@ document.addEventListener("click", (e) => {
     
     
     
-    else if (e.target.matches(".rect-btn") || e.target.matches(".rect-btn svg")) state = "rect";
-    else if (e.target.matches(".circle-btn") || e.target.matches(".circle-btn svg")) state = "circle";
-    else if (e.target.matches(".text-btn") || e.target.matches(".text-btn svg")) state = "text";
-    else if (e.target.matches(".pan-btn") || e.target.matches(".pan-btn svg")) state = "pan";
+    // else if (e.target.matches(".rect-btn") || e.target.matches(".rect-btn svg")) state = "rect";
+    // else if (e.target.matches(".circle-btn") || e.target.matches(".circle-btn svg")) state = "circle";
+    // else if (e.target.matches(".text-btn") || e.target.matches(".text-btn svg")) state = "text";
+    // else if (e.target.matches(".pan-btn") || e.target.matches(".pan-btn svg")) state = "pan";
 
 
 
@@ -705,29 +785,30 @@ document.addEventListener("click", (e) => {
 
 // toolbar Logic
 const toolbar = document.getElementById('toolbar');
-const tools   = [...toolbar.children].filter(n => n.classList.contains('tool'));
-const label   = document.createElement('div');
+const tools = [...toolbar.children].filter(n => n.classList.contains('tool'));
+const label = document.createElement('div');
 label.id = 'toolLabel';
 toolbar.appendChild(label);
 
 function updateUI(activeBtn) {
-  const idx = tools.indexOf(activeBtn);
-  tools.forEach((btn, i) => {
+    const idx = tools.indexOf(activeBtn);
+    tools.forEach((btn, i) => {
     const op = Math.max(1 - Math.abs(i - idx) * 0.2, 0.1);
     btn.style.opacity = op;
     btn.classList.toggle('active', btn === activeBtn);
-  });
+    });
 
-  label.textContent = activeBtn.dataset.name;
-  const btnRect = activeBtn.getBoundingClientRect();
-  const barRect = toolbar.getBoundingClientRect();
-  label.style.left = `${btnRect.left + btnRect.width/2 - barRect.left}px`;
-  label.classList.add('show');
+    label.textContent = activeBtn.dataset.name;
+    state = activeBtn.dataset.name;
+    const btnRect = activeBtn.getBoundingClientRect();
+    const barRect = toolbar.getBoundingClientRect();
+    label.style.left = `${btnRect.left + btnRect.width/2 - barRect.left}px`;
+    label.classList.add('show');
 }
 
 toolbar.addEventListener('click', e => {
-  const tgt = e.target.closest('.tool');
-  if (tgt) updateUI(tgt);
+    const tgt = e.target.closest('.tool');
+    if (tgt) updateUI(tgt);
 });
 
 updateUI(tools[6]);
