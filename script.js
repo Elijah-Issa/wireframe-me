@@ -3,7 +3,7 @@ let clientX, clientY;
 let relXPos, relYPos;
 let initTouch;
 let differenceTouch = 0;
-let state = "Pan";
+let state;
 let startX, startY;      // where the touch started
 let outerTempShape = null;
 
@@ -48,31 +48,29 @@ document.addEventListener("touchstart", (e) => {
         startY = touch.clientY;
 
         outerTempShape = document.createElement("div");
-        Object.assign({
-            position: "absolute",
+        Object.assign(outerTempShape.style, {
+            position: 'absolute',
             left: `${startX}px`,
             top: `${startY}px`,
-            width: "0",
-            height: "0",
-            borderRadius: "2px dotted black",
+            width: 'fit-content',
+            height: 'fit-content',
+            zIndex: "999",
         });
 
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.style.positionj = "absolute";
+        // svg.style.positionj = "absolute";
         svg.style.left = `${startX}px`;
         svg.style.top = `${startY}px`;
         svg.setAttribute("width", "0");
         svg.setAttribute("height", "0");
         svg.setAttribute("viewBox", "25 0 0 0");
 
-        const d = "M 25 25";
+        const d = "M 25 25 c 0 0 0 0 0 0";
 
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("stroke-width", "0");
-        path.setAttribute("stroke", "black");
         path.setAttribute("d", d);
         path.setAttribute("stroke", "black");
-        path.setAttribute("stroke-width", "5");
+        path.setAttribute("stroke-width", "0");
         path.setAttribute("fill", "none");
         path.setAttribute("stroke-linecap", "round");
 
@@ -241,22 +239,30 @@ document.addEventListener("touchmove", (e) => {
 
         let svg = outerTempShape.querySelector("svg");
         let path = svg.querySelector("path");
-        let dArr = path.getAttribute("d").split(" ");
-        let x = Number(dArr[8]);
+        let svgHeight = Number(svg.getAttribute("height"));
         let svgWidth = Number(svg.getAttribute("width"));
+        let strokeWidth = Number(path.getAttribute("stroke-width"));
         let vby = Number(svg.getAttribute("viewBox").split(" ")[3]);
             
         x = touch.clientX - startX;
-        svgWidth += touch.clientX - startX;
+        svgWidth = touch.clientX - startX;
+        svgHeight = e.touches[0].clientY - startY;
         vby = touch.clientX - startX;
+        strokeWidth = e.touches[0].clientY - startX;
+
+        if (x < 0 || svgWidth < 0) {
+            outerTempShape.style.left = `${touch.clientX}px`;
+        }
+
+        let vb = `25 0 ${svgWidth} ${vby / 2}`;
+        svg.setAttribute("viewBox", vb);
+        svg.setAttribute("width", svgWidth);
+        svg.setAttribute("height", svgHeight);
 
         let d = `M 25 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
-       
-        svg.setAttribute("width", svgWidth);
-        let vb = `25 0 ${svgWidth} ${vby}`;
-        svg.setAttribute("viewBox", vb);
-        
         path.setAttribute("d", d);
+        path.setAttribute("stroke-width", strokeWidth);
+        path.setAttribute("stroke-dasharray", "4 4");
     }
     
     else if (e.target.matches(".shape") && state == "Pan") {
@@ -362,7 +368,6 @@ document.addEventListener("touchmove", (e) => {
 
         strokeWidth += e.touches[0].clientY - differenceTouch.h;
         svgHeight += e.touches[0].clientY - differenceTouch.h;
-        // svgWidth += (e.touches[0].clientY - differenceTouch.h) + 1;
         vby += e.touches[0].clientY - differenceTouch.h;
 
         let vb = `25 0 ${svgWidth} ${svgHeight}`;
