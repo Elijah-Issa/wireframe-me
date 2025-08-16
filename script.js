@@ -24,7 +24,7 @@ document.addEventListener("touchstart", (e) => {
         else if (state == "Rectangle") borderRad = "8px";
         
         outerTempShape = document.createElement('div');
-        outerTempShape.className = 'temp-shape';
+        outerTempShape.className = 'cont';
         Object.assign(outerTempShape.style, {
             position: 'absolute',
             left: `${startX}px`,
@@ -48,6 +48,7 @@ document.addEventListener("touchstart", (e) => {
         startY = touch.clientY;
 
         outerTempShape = document.createElement("div");
+        outerTempShape.className = "svg-cont";
         Object.assign(outerTempShape.style, {
             position: 'absolute',
             left: `${startX}px`,
@@ -62,17 +63,18 @@ document.addEventListener("touchstart", (e) => {
         svg.style.left = `${startX}px`;
         svg.style.top = `${startY}px`;
         svg.setAttribute("width", "0");
-        svg.setAttribute("height", "0");
-        svg.setAttribute("viewBox", "25 0 0 0");
+        svg.setAttribute("height", "50");
+        svg.setAttribute("viewBox", "25 0 0 50");
 
         const d = "M 25 25 c 0 0 0 0 0 0";
 
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         path.setAttribute("d", d);
         path.setAttribute("stroke", "black");
-        path.setAttribute("stroke-width", "0");
+        path.setAttribute("stroke-width", "3");
         path.setAttribute("fill", "none");
         path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-dasharray", "4 4");
 
         svg.appendChild(path);
         outerTempShape.appendChild(svg);
@@ -150,6 +152,7 @@ document.addEventListener("touchstart", (e) => {
         }
         
         shape = e.target.closest(".cont");
+        // shape = e.target;
         // cont.classList.add("selected");
     }
     else if (e.target.matches(".svg-cont") && state == "Pan") {
@@ -239,30 +242,26 @@ document.addEventListener("touchmove", (e) => {
 
         let svg = outerTempShape.querySelector("svg");
         let path = svg.querySelector("path");
-        let svgHeight = Number(svg.getAttribute("height"));
+        // let svgHeight = Number(svg.getAttribute("height"));
         let svgWidth = Number(svg.getAttribute("width"));
-        let strokeWidth = Number(path.getAttribute("stroke-width"));
-        let vby = Number(svg.getAttribute("viewBox").split(" ")[3]);
+        // let strokeWidth = Number(path.getAttribute("stroke-width"));
+        // let viewBoxX = Number(svg.getAttribute("viewBox").split(" ")[2]);
             
         x = touch.clientX - startX;
         svgWidth = touch.clientX - startX;
-        svgHeight = e.touches[0].clientY - startY;
-        vby = touch.clientX - startX;
-        strokeWidth = e.touches[0].clientY - startX;
+        // strokeWidth = touch.clientX - startX;
+        svgHeight = touch.clientY - startY;
+        vby = touch.clientY - startY;
 
-        if (x < 0 || svgWidth < 0) {
-            outerTempShape.style.left = `${touch.clientX}px`;
-        }
-
-        let vb = `25 0 ${svgWidth} ${vby / 2}`;
-        svg.setAttribute("viewBox", vb);
+        let viewBox = `25 0 ${x} 50`;
+        svg.setAttribute("viewBox", viewBox);
         svg.setAttribute("width", svgWidth);
-        svg.setAttribute("height", svgHeight);
+        // svg.setAttribute("height", svgHeight);
 
         let d = `M 25 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
         path.setAttribute("d", d);
-        path.setAttribute("stroke-width", strokeWidth);
-        path.setAttribute("stroke-dasharray", "4 4");
+        // path.setAttribute("stroke-width", strokeWidth);
+        // path.setAttribute("stroke-dasharray", "4 4");
     }
     
     else if (e.target.matches(".shape") && state == "Pan") {
@@ -393,7 +392,7 @@ document.addEventListener("touchend", (e) => {
     ) {
         const tempShapeWidth = outerTempShape.style.width.slice(0, outerTempShape.style.width.indexOf("p"));
         const tempShapeHeight = outerTempShape.style.height.slice(0, outerTempShape.style.height.indexOf("p"));
-        createRect(e=e, width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
+        createRect(width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
     }
     else if (
         state != "Pan" &&
@@ -404,7 +403,23 @@ document.addEventListener("touchend", (e) => {
     ) {
         const tempShapeWidth = outerTempShape.style.width.slice(0, outerTempShape.style.width.indexOf("p"));
         const tempShapeHeight = outerTempShape.style.height.slice(0, outerTempShape.style.height.indexOf("p"));
-        createCircle(e=e, width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
+        createCircle(width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
+    }
+    else if (
+        state == "Text" &&
+        !e.target.matches("#toolbar") &&
+        !e.target.matches(".shape-btn") &&
+        !e.target.matches(".shape-btn svg")
+    ) {
+        const svg = outerTempShape.querySelector("svg");
+        const path = svg.querySelector("path");
+
+        const dAttr = path.getAttribute("d");
+        const viewBoxAttr = svg.getAttribute("viewBox");
+
+        const tempShapeLeft = outerTempShape.style.left.slice(0, outerTempShape.style.left.indexOf("p"));
+        const tempShapeTop = outerTempShape.style.top.slice(0, outerTempShape.style.top.indexOf("p"));
+        createText(svgWidth=svg.getAttribute("width"), d=viewBoxAttr, viewBox=dAttr, left=tempShapeLeft, top=tempShapeTop);
     }
     if (outerTempShape) {
         outerTempShape.remove();
@@ -418,7 +433,6 @@ document.addEventListener("touchend", (e) => {
 
 
 document.addEventListener("click", (e) => {
-    console.log(state);
     if (e.target.matches(".shape")) {
         shape = e.target.closest(".cont");
         // shape.classList.add("selected");
@@ -438,14 +452,30 @@ document.addEventListener("click", (e) => {
         whDot.style.opacity = "1";
         whDot.style.pointerEvents = "auto";
      }
+    else if (e.target.matches(".svg-cont")) {
+        shape = e.target;
+        shape.classList.add("selected");
+        // const delBtn = shape.querySelector(".del-btn");
+        // const cpyBtn = shape.querySelector(".cpy-btn");
+        const wDot = shape.querySelector(".w-dot");
+        const hDot = shape.querySelector(".h-dot");
+        // cpyBtn.style.opacity = "1";
+        // cpyBtn.style.pointerEvents = "auto";
+        // delBtn.style.opacity = "1";
+        // delBtn.style.pointerEvents = "auto";
+        wDot.style.opacity = "1";
+        wDot.style.pointerEvents = "auto";
+        hDot.style.opacity = "1";
+        hDot.style.pointerEvents = "auto";
+    }
     else if (
         shape &&
         !e.target.matches(".svg-cont") &&
         !e.target.matches(".shape") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".tool") &&
-        !e.target.matches(".tool svg") &&
-        !e.target.matches(".create-tool")
+        !e.target.matches(".tool svg")
+        // !e.target.matches(".create-tool")
     ) {
         shape.classList.remove("selected");
         // const delBtn = shape.querySelector(".del-btn");
@@ -464,22 +494,7 @@ document.addEventListener("click", (e) => {
         whDot.style.opacity = "0";
         whDot.style.pointerEvents = "none";
     }
-    else if (e.target.matches(".svg-cont")) {
-        shape = e.target;
-        shape.classList.add("selected");
-        // const delBtn = shape.querySelector(".del-btn");
-        // const cpyBtn = shape.querySelector(".cpy-btn");
-        const wDot = shape.querySelector(".w-dot");
-        const hDot = shape.querySelector(".h-dot");
-        // cpyBtn.style.opacity = "1";
-        // cpyBtn.style.pointerEvents = "auto";
-        // delBtn.style.opacity = "1";
-        // delBtn.style.pointerEvents = "auto";
-        wDot.style.opacity = "1";
-        wDot.style.pointerEvents = "auto";
-        hDot.style.opacity = "1";
-        hDot.style.pointerEvents = "auto";
-    }
+    
     else if (e.target.matches(".show-create-dr-btn") || e.target.closest(".dr-btn-bg")) {
         if (!crDrawer.classList.contains("show-cr-drawer")) {
             crDrawer.classList.add("show-cr-drawer");
@@ -821,7 +836,7 @@ updateUI(tools[6]);
 
 
 
-function createRect(e, width, height, left, top) {
+function createRect(width, height, left, top) {
     const cont = document.createElement("div");
     cont.className = "cont rect";
     cont.style.padding = "1rem";
@@ -889,7 +904,7 @@ function createRect(e, width, height, left, top) {
     document.body.appendChild(cont);
 }
 
-function createCircle(e, width, height, left, top) {
+function createCircle(width, height, left, top) {
     const cont = document.createElement("div");
     cont.className = "cont circle";
     cont.style.padding = "1rem";
@@ -957,13 +972,15 @@ function createCircle(e, width, height, left, top) {
     document.body.appendChild(cont);
 }
 
-function createText(e, width, height, left, top) {
+function createText(svgWidth, viewBox, d, left, top) {
     const cont = document.createElement("div");
-    cont.className = "svg-cont svg";
+    cont.className = "svg-cont";
     cont.style.padding = "1rem";
     cont.style.width = "fit-content";
     cont.style.height = "fit-content";
     cont.style.position = "absolute";
+    cont.style.left = `${left}px`;
+    cont.style.top = `${top}px`;
 
     
     const wDot = document.createElement("div");
@@ -993,45 +1010,34 @@ function createText(e, width, height, left, top) {
     hDot.style.transform = "translateX(-50%)";
     hDot.style.opacity = "0";
     hDot.style.pointerEvents = "none";
-    
-    const delBtn = document.createElement("div");
-    delBtn.className = "del-btn shape-btn";
-    delBtn.style.borderRadius = "8px";
-    delBtn.style.backgroundColor = "blueViolet";
-    delBtn.style.color = "white";
-    delBtn.style.padding = "0.3rem 0.5rem";
-    delBtn.style.position = "absolute";
-    delBtn.style.left = "1rem";
-    delBtn.style.top = "-1.5rem";
-    delBtn.innerText = "Delete";
-    delBtn.style.opacity = "0";
-    delBtn.style.pointerEvents = "none";
-    
-    const cpyBtn = document.createElement("div");
-    cpyBtn.className = "cpy-btn shape-btn";
-    cpyBtn.style.borderRadius = "8px";
-    cpyBtn.style.backgroundColor = "blueViolet";
-    cpyBtn.style.color = "white";
-    cpyBtn.style.padding = "0.3rem 0.5rem";
-    cpyBtn.style.position = "absolute";
-    cpyBtn.style.left = "5rem";
-    cpyBtn.style.top = "-1.5rem";
-    cpyBtn.innerText = "Copy";
-    cpyBtn.style.opacity = "0";
-    cpyBtn.style.pointerEvents = "none";
 
+    const whDot = document.createElement("div");
+    whDot.className = "w-h-dot dot";
+    whDot.style.display = "none";
+    whDot.style.width = "15px";
+    whDot.style.height = "15px";
+    whDot.style.borderRadius = "50px";
+    whDot.style.backgroundColor = "black";
+    whDot.style.position = "absolute";
+    const wh = 15 / 2;
+    whDot.style.right = `calc(2rem - ${wh}%)`;
+    whDot.style.bottom = "1rem";
+    whDot.style.transform = "translateY(-50%)";
+    whDot.style.opacity = "0";
+    whDot.style.pointerEvents = "none";
+    
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", "100");
+    svg.setAttribute("width", svgWidth);
     svg.setAttribute("height", "50");
-    svg.setAttribute("viewBox", "25 0 100 60");
+    svg.setAttribute("viewBox", viewBox);
     svg.style.pointerEvents = "none";
     
-    const d = "M 25 25 c 50 -25 50 25 100 0";
+    // const d = "M 25 25 c 50 -25 50 25 100 0";
     
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", d);
     path.setAttribute("stroke", "black");
-    path.setAttribute("stroke-width", "5");
+    path.setAttribute("stroke-width", "3");
     path.setAttribute("fill", "none");
     path.setAttribute("stroke-linecap", "round");
     path.style.pointerEvents = "none";
@@ -1040,7 +1046,6 @@ function createText(e, width, height, left, top) {
     cont.appendChild(svg);
     cont.appendChild(wDot);
     cont.appendChild(hDot);
-    cont.appendChild(delBtn);
-    cont.appendChild(cpyBtn);
+    cont.appendChild(whDot);
     document.body.appendChild(cont);
 }
