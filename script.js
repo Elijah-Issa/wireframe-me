@@ -1,23 +1,17 @@
 const shapebar = document.getElementById("shapebar");
 const lock = document.querySelector(".lock-btn");
 
-//! For Test
-const p = document.querySelector(".for-test");
-
 let shape;
 let clientX, clientY;
 let relXPos, relYPos;
 let initTouch;
 let differenceTouch = 0;
 let state;
-let startX, startY; // where the touch started
+let startX, startY;      // where the touch started
 let outerTempShape = null;
 let lineShape;
-let angle;
 
 document.addEventListener("touchstart", (e) => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
     if (
         state == "Rectangle" ||
         state == "Circle" &&
@@ -206,10 +200,6 @@ document.addEventListener("touchstart", (e) => {
 // let lockY = true;
 // let normDx = 0;
 document.addEventListener("touchmove", (e) => {
-    angle = GetDegree(startX, startY, e.touches[0]);
-    console.log(angle)
-    // let the element face the mouse cursor.
-    p.style.transform = `rotate(${angle}deg)`;
     if (
         state == "Rectangle" ||
         state == "Circle" &&
@@ -1168,19 +1158,4 @@ function DrawLine(initX, initY ,touch, wrapper) {
     line.setAttribute("y1", y1);
     line.setAttribute("x2", width);
     line.setAttribute("y2", height);
-}
-
-function GetDegree(initX, initY, touch) {
-    if (!initX || !initY) return;
-
-    const dx = touch.clientX - initX;
-    const dy = touch.clientY - initY;
-
-    // angle in degrees, 0° = right, 90° = down, 180° = left, 270° = up
-    let deg = Math.atan2(dy, dx) * 180 / Math.PI;
-
-    // keep it in [0, 360) if you prefer
-    if (deg < 0) deg += 360;
-
-    return deg;
 }
