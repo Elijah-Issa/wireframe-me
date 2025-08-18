@@ -98,34 +98,8 @@ document.addEventListener("touchstart", (e) => {
         lineShape = InitLine(startX, startY);
     }
 
-    // else if (e.target.matches(".shape") && state == "pan") {
-    //     outerTempShape = document.createElement("div");
-    //     outerTempShape.style.position = "absolute";
-    //     outerTempShape.style.left = `${startX}`;
-    //     outerTempShape.style.top = `${startY}`;
-    //     outerTempShape.style.width = "fit-content";
-    //     outerTempShape.style.height = "fit-content";
-        
-    //     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    //     svg.setAttribute("width", "0");
-    //     svg.setAttribute("height", "0");
-    //     svg.setAttribute("viewBox", "25 0 0 0");
-
-    //     const d = "M 25 25";
-
-    //     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    //     path.setAttribute("d", d);
-    //     path.setAttribute("stroke", "black");
-    //     path.setAttribute("stroke-width", "0");
-    //     path.setAttribute("fill", "none");
-    //     path.setAttribute("stroke-linecap", "round");
-
-    //     svg.appendChild(path);
-    //     outerTempShape.appendChild(svg);
-    //     document.body.appendChild(outerTempShape);
-    // }
-
     else if (e.target.matches(".shape") && state == "Pan") {
+        shapebar.style.display = "flex";
         const cont = e.target.closest(".cont");
         // const delBtn = cont.querySelector(".del-btn");
         // const cpyBtn = cont.querySelector(".cpy-btn");
@@ -172,6 +146,7 @@ document.addEventListener("touchstart", (e) => {
         // cont.classList.add("selected");
     }
     else if (e.target.matches(".svg-cont") && state == "Pan") {
+        shapebar.style.display = "flex";
         const cont = e.target;
         // const delBtn = cont.querySelector(".del-btn");
         // const cpyBtn = cont.querySelector(".cpy-btn");
@@ -297,7 +272,7 @@ document.addEventListener("touchmove", (e) => {
         shape.style.left = `${xPos}px`;
         shape.style.top = `${yPos}px`;
     }
-    else if (e.target.matches(".svg-cont") && state == "Pan") {
+    else if (e.target.matches(".svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
         const touch = e.touches[0] || e.changedTouches[0];
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
@@ -337,7 +312,7 @@ document.addEventListener("touchmove", (e) => {
     //     widthInput.value = x;
     // }
     
-    else if (e.target.matches(".w-dot") && !shape.classList.contains("svg-cont") && state == "Pan") {
+    else if (e.target.matches(".w-dot") && !shape.classList.contains("svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
         const cont = e.target.closest(".cont");
         const actShape = cont.querySelector(".shape");
         let normX = Number(actShape.style.width.slice(0, actShape.style.width.indexOf("p")));
@@ -345,7 +320,7 @@ document.addEventListener("touchmove", (e) => {
         normX += e.touches[0].clientX - differenceTouch.w;
         actShape.style.width = `${normX}px`;
     }
-    else if (e.target.matches(".h-dot") && !shape.classList.contains("svg-cont") && state == "Pan") {
+    else if (e.target.matches(".h-dot") && !shape.classList.contains("svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
         const cont = e.target.closest(".cont");
         const actShape = cont.querySelector(".shape");
         let normY = Number(actShape.style.height.slice(0, actShape.style.height.indexOf("p")));
@@ -353,7 +328,7 @@ document.addEventListener("touchmove", (e) => {
         normY += e.touches[0].clientY - differenceTouch.h;
         actShape.style.height = `${normY}px`;
     }
-    else if (e.target.matches(".w-h-dot") && !shape.classList.contains("svg-cont") && state == "Pan") {
+    else if (e.target.matches(".w-h-dot") && !shape.classList.contains("svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
         const cont = e.target.closest(".cont");
         const actShape = cont.querySelector(".shape");
         let normX = Number(actShape.style.width.slice(0, actShape.style.width.indexOf("p")));
@@ -364,7 +339,7 @@ document.addEventListener("touchmove", (e) => {
         actShape.style.width = `${normX}px`;
         actShape.style.height = `${normY}px`;
     }
-    else if (e.target.matches(".w-dot") && shape.classList.contains("svg-cont") && state == "Pan") {
+    else if (e.target.matches(".w-dot") && shape.classList.contains("svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
         let path = shape.querySelector("path");
         let svg = shape.querySelector("svg");
         let dArr = path.getAttribute("d").split(" ");
@@ -383,7 +358,7 @@ document.addEventListener("touchmove", (e) => {
         
         path.setAttribute("d", d);
     }
-    else if (e.target.matches(".h-dot") && shape.classList.contains("svg-cont") && state == "Pan") {
+    else if (e.target.matches(".h-dot") && shape.classList.contains("svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
         let svg = shape.querySelector("svg");
         let path = svg.querySelector("path");
         let svgHeight = Number(svg.getAttribute("height"));
@@ -459,6 +434,16 @@ document.addEventListener("touchend", (e) => {
 
 
 document.addEventListener("click", (e) => {
+    if (e.target.closest(".shape-lock-icon")) {
+        if (!shape) return;
+
+        const lockIcon = e.target.closest(".shape-lock-icon");
+        const innerShape = lockIcon.closest(".cont") || lockIcon.closest(".svg-cont");
+        innerShape.dataset.isLock = "false";
+        lockIcon.style.pointerEvents = "none";
+        lockIcon.style.display = "none";
+    }
+    
     if (e.target.matches(".shape")) {
         shape = e.target.closest(".cont");
         // shape.classList.add("selected");
@@ -827,6 +812,24 @@ document.addEventListener("click", (e) => {
     }
 });
 
+function LockShape(target) {
+    if (!target) return;
+
+    target.dataset.isLock = "true";
+    const shapeIcon = shape.querySelector(".shape-lock-icon");
+    shapeIcon.style.display = "flex";
+    shapeIcon.style.pointerEvents = "auto";
+}
+
+shapebar.addEventListener("click", (e) => {
+    if (e.target.closest(".sh-tool") == null) return;
+
+    shapeBtn = e.target.closest(".sh-tool");
+    if (shapeBtn.classList.contains("lock-btn")) {
+        LockShape(shape);
+    }
+});
+
 
 
 // toolbar Logic
@@ -853,6 +856,7 @@ function updateUI(activeBtn) {
 }
 
 toolbar.addEventListener('click', e => {
+    if (e.target.closest(".tool") == null) return;
     const tgt = e.target.closest('.tool');
     if (tgt) updateUI(tgt);
 });
@@ -872,6 +876,14 @@ function createRect(width, height, left, top) {
     cont.style.left = `${left}px`;
     cont.style.top = `${top}px`;
     cont.setAttribute("data-is-lock", "false");
+    
+    cont.innerHTML += `
+        <div class="shape-lock-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" height="34px" viewBox="0 -960 960 960" width="34px" fill="#000000">
+                <path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/>
+            </svg>
+        </div>
+    `
    
     const wDot = document.createElement("div");
     wDot.className = "w-dot dot";
@@ -941,6 +953,14 @@ function createCircle(width, height, left, top) {
     cont.style.left = `${left}px`;
     cont.style.top = `${top}px`;
     cont.setAttribute("data-is-lock", "false");
+
+    cont.innerHTML += `
+        <div class="shape-lock-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" height="34px" viewBox="0 -960 960 960" width="34px" fill="#000000">
+                <path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/>
+            </svg>
+        </div>
+    `
     
     const wDot = document.createElement("div");
     wDot.className = "w-dot dot";
@@ -1009,7 +1029,15 @@ function createText(svgWidth, viewBox, d, left, top) {
     cont.style.position = "absolute";
     cont.style.left = `${left}px`;
     cont.style.top = `${top}px`;
+    cont.setAttribute("data-is-lock", "false");
 
+    cont.innerHTML += `
+        <div class="shape-lock-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" height="34px" viewBox="0 -960 960 960" width="34px" fill="#000000">
+                <path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/>
+            </svg>
+        </div>
+    `
     
     const wDot = document.createElement("div");
     wDot.className = "w-dot dot";
@@ -1119,7 +1147,7 @@ function DrawLine(initX, initY ,touch, wrapper) {
 
     svg.setAttribute("width", width);
     svg.setAttribute("height", height);
-    svg.setAttribute("viewBox", `${initX} ${initY + (width / 2)} ${width} ${height}`)
+    svg.setAttribute("viewBox", `${width / 2} ${height / 2} ${width} ${height}`)
 
     let x1 = initX;
     let y1 = initY;

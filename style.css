@@ -159,3 +159,18 @@ body {
     transition: opacity 0.3s ease-in-out;
     z-index: 999;
 }
+
+.shape-lock-icon {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 46px;
+    height: 46px;
+    background-color: rgba(0, 0, 0, .1);
+    pointer-events: none;
+    border-radius: 6px;
+}
