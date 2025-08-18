@@ -9,7 +9,7 @@ let differenceTouch = 0;
 let state;
 let startX, startY;      // where the touch started
 let outerTempShape = null;
-let lineShape;
+let lineShape, angle;
 
 document.addEventListener("touchstart", (e) => {
     if (
@@ -263,6 +263,7 @@ document.addEventListener("touchmove", (e) => {
         const touch = e.touches[0];
 
         DrawLine(startX, startY, touch, lineShape);
+        agnle = RotateLine(startX, startY, e.touches[0], lineShape);
     }
     
     else if (e.target.matches(".shape") && state == "Pan" && shape.dataset.isLock == "false") {
@@ -340,8 +341,8 @@ document.addEventListener("touchmove", (e) => {
         actShape.style.height = `${normY}px`;
     }
     else if (e.target.matches(".w-dot") && shape.classList.contains("svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
-        let path = shape.querySelector("path");
         let svg = shape.querySelector("svg");
+        let path = svg.querySelector("path");
         let dArr = path.getAttribute("d").split(" ");
         let x = Number(dArr[8]);
         let svgWidth = Number(svg.getAttribute("width"));
@@ -421,6 +422,28 @@ document.addEventListener("touchend", (e) => {
         const tempShapeLeft = outerTempShape.style.left.slice(0, outerTempShape.style.left.indexOf("p"));
         const tempShapeTop = outerTempShape.style.top.slice(0, outerTempShape.style.top.indexOf("p"));
         createText(svgWidth=svg.getAttribute("width"), d=viewBoxAttr, viewBox=dAttr, left=tempShapeLeft, top=tempShapeTop);
+    }
+    else if (
+        state == "Line" &&
+        !e.target.matches("#toolbar") &&
+        !e.target.matches(".shape-btn") &&
+        !e.target.matches(".shape-btn svg")
+    ) {
+        const svg = outerTempShape.querySelector("svg");
+        const line = svg.querySelector("line");
+        
+        const tempShapeLeft = outerTempShape.style.left.slice(0, outerTempShape.style.left.indexOf("p"));
+        const tempShapeTop = outerTempShape.style.top.slice(0, outerTempShape.style.top.indexOf("p"));
+
+        const x1 = line.getAttribute("x1");
+        const y1 = line.getAttribute("y1");
+        const x2 = line.getAttribute("x2");
+        const y2 = line.getAttribute("y2");
+
+        const width = svg.getAttribute("width");
+        const viewBox = svg.getAttribute("viewBox");
+
+        createLine(angle, x1, y1, x2, y2, tempShapeLeft, tempShapeTop, width, `0 0 ${width} 10`);
     }
     if (outerTempShape) {
         outerTempShape.remove();
@@ -960,7 +983,7 @@ function createCircle(width, height, left, top) {
                 <path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/>
             </svg>
         </div>
-    `
+    `;
     
     const wDot = document.createElement("div");
     wDot.className = "w-dot dot";
@@ -1110,25 +1133,25 @@ function InitLine(initX, initY) {
     outerTempShape = document.createElement("div");
     outerTempShape.className = "cont line";
     outerTempShape.style.position = "absolute";
-    outerTempShape.style.left = `${startX}px`;
-    outerTempShape.style.top = `${startY}px`;
+    outerTempShape.style.left = `${initX}px`;
+    outerTempShape.style.top = `${initY}px`;
     outerTempShape.style.width = "fit-content";
     outerTempShape.style.height = "fit-content";
     outerTempShape.style.border = "2px dotted black";
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("width", "0");
-    svg.setAttribute("height", "0");
-    svg.setAttribute("veiwBox", `${initX} ${initY} 0 0`);
+    svg.setAttribute("height", "10");
+    svg.setAttribute("veiwBox", `0 0 0 10`);
 
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("stroke", "black");
-    line.setAttribute("stroke-width", "5");
+    line.setAttribute("stroke-width", "3");
     line.setAttribute("fill", "none");
-    line.setAttribute("x1", initX);
-    line.setAttribute("y1", initY);
-    line.setAttribute("x2", initX);
-    line.setAttribute("y2", initY);
+    // line.setAttribute("x1", initX);
+    // line.setAttribute("y1", initY);
+    // line.setAttribute("x2", initX);
+    // line.setAttribute("y2", initY);
     line.setAttribute("stroke-dasharray", "4 4");
 
     svg.appendChild(line);
@@ -1143,19 +1166,67 @@ function DrawLine(initX, initY ,touch, wrapper) {
     const line = svg.querySelector("line");
 
     let width = touch.clientX - initX;
-    let height = touch.clientY - initY;
+
+    if (width < 0) {
+        wrapper.style.left = `${touch.clientX}px`;
+        width *= -1;
+    }
+    // let height = touch.clientY - initY;
 
     svg.setAttribute("width", width);
-    svg.setAttribute("height", height);
-    svg.setAttribute("viewBox", `${width / 2} ${height / 2} ${width} ${height}`)
+    // svg.setAttribute("viewBox", `${width / 2} 5 ${width} 5`)
+    svg.setAttribute("viewBox", `0 0 ${width} 10`);
 
-    let x1 = initX;
-    let y1 = initY;
-    let x2 = touch.clientX - initX;
-    let y2 = touch.clientY - initY;
+    // let x1 = initX;
+    // let y1 = initY;
+    // let x2 = touch.clientX - initX;
+    // let y2 = touch.clientY - initY;
 
+    line.setAttribute("x1", 0);
+    line.setAttribute("y1", "5");
+    line.setAttribute("x2", width);
+    line.setAttribute("y2", "5");
+}
+
+function RotateLine(initX, initY, touch, wrapper) {
+    if (!wrapper) return;
+    
+    const dx = touch.clientX - initX;
+    const dy = touch.clientY - initY;
+
+    let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    if (angle < 0) angle += 360;
+
+    wrapper.style.transform = `rotate(${angle}deg)`;
+
+    return angle;
+}
+
+function createLine(angle, x1, y1, x2, y2, left, top, width, viewBox) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "cont line";
+    Object.assign(wrapper.style, {
+        position: "absolute",
+        left: `${left}px`,
+        top: `${top}px`,
+        width: "fit-content",
+        height: "fit-content",
+        transform: `rotate(${angle}deg)`,
+    });
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", width);
+    svg.setAttribute("height", "10");
+    svg.setAttribute("viewBox", viewBox);
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", x1);
     line.setAttribute("y1", y1);
-    line.setAttribute("x2", width);
-    line.setAttribute("y2", height);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+
+    svg.appendChild(line);
+    wrapper.appendChild(svg);
+    document.body.appendChild(wrapper);
 }
