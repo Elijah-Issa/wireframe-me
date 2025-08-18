@@ -7,20 +7,6 @@
     </head>
 
     <body>
-        
-        <!-- <div class="tools-drawer">
-            <div class="create-tool tl">Create</div>
-            <div class="lasso-tool tl">Lasso</div>
-            <div class="menu-tool tl">Menu</div>
-            <div class="hide-tool tl">^</div>
-        </div>
-
-        <div class="create-drawer">
-            <div class="rect-btn sh">Rect</div>
-            <div class="circle-btn sh">Circle</div>
-            <div class="text-btn sh">Text</div>
-            <div class="hide-btn sh">^</div>
-        </div> -->
 
         <div id="toolbar">
             <!-- Rectangle -->
@@ -67,12 +53,52 @@
                 </svg>
             </button>
         </div>
-        
-        <!-- <div class="edit-values">
-            <input class="width-input" type="number" placeholder="Width ?" />
-            <input class="height-input" type="number" placeholder="Height ?" />
-        </div> -->
-        
+
+
+        <div id="shapebar">
+            <!-- Create a Copy -->
+            <button class="sh-tool copy-btn shape-btn" data-name="Copy">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                    <path d="M120-220v-80h80v80h-80Zm0-140v-80h80v80h-80Zm0-140v-80h80v80h-80ZM260-80v-80h80v80h-80Zm100-160q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480Zm40 240v-80h80v80h-80Zm-200 0q-33 0-56.5-23.5T120-160h80v80Zm340 0v-80h80q0 33-23.5 56.5T540-80ZM120-640q0-33 23.5-56.5T200-720v80h-80Zm420 80Z"/>
+                </svg>
+            </button>
+
+            <!-- Delete Shape -->
+            <button class="sh-tool delete-btn shape-btn" data-name="Delete">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                    <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/>
+                </svg>
+            </button>
+
+            <!-- Bring To Front -->
+            <button class="sh-tool b-t-f-btn shape-btn" data-name="BringToFront">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                    <path d="M360-280q-33 0-56.5-23.5T280-360v-400q0-33 23.5-56.5T360-840h400q33 0 56.5 23.5T840-760v400q0 33-23.5 56.5T760-280H360Zm0-80h400v-400H360v400ZM200-200v80q-33 0-56.5-23.5T120-200h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 480v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Z"/>
+                </svg>
+            </button>
+
+            <!-- Send To Back -->
+            <button class="sh-tool s-t-b-btn shape-btn" data-name="SendToBack">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                    <path d="M200-120q-33 0-56.5-23.5T120-200v-480h80v480h480v80H200Zm160-240v80q-33 0-56.5-23.5T280-360h80Zm-80-80v-80h80v80h-80Zm0-160v-80h80v80h-80Zm80-160h-80q0-33 23.5-56.5T360-840v80Zm80 480v-80h80v80h-80Zm0-480v-80h80v80h-80Zm160 0v-80h80v80h-80Zm0 480v-80h80v80h-80Zm160-480v-80q33 0 56.5 23.5T840-760h-80Zm0 400h80q0 33-23.5 56.5T760-280v-80Zm0-80v-80h80v80h-80Zm0-160v-80h80v80h-80Z"/>
+                </svg>
+            </button>
+
+            <!-- Lock -->
+            <button class="sh-tool lock-btn shape-btn" data-name="Lock">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                    <path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/>
+                </svg>
+            </button>
+        </div>
+
+        <svg width="200" height="100" viewBox="0 0 200 100">
+            <!-- x1,y1 = start point, x2,y2 = end point -->
+            <line x1="10"  y1="10"
+                    x2="200" y2="10"
+                    stroke="#3498db"
+                    stroke-width="5"/>
+        </svg>
 
         <script src="./script.js"></script>
     </body>

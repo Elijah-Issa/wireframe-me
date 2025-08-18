@@ -1,3 +1,6 @@
+const shapebar = document.getElementById("shapebar");
+const lock = document.querySelector(".lock-btn");
+
 let shape;
 let clientX, clientY;
 let relXPos, relYPos;
@@ -6,6 +9,7 @@ let differenceTouch = 0;
 let state;
 let startX, startY;      // where the touch started
 let outerTempShape = null;
+let lineShape;
 
 document.addEventListener("touchstart", (e) => {
     if (
@@ -81,33 +85,45 @@ document.addEventListener("touchstart", (e) => {
 
         document.body.appendChild(outerTempShape);
     }
-
-    else if (e.target.matches(".shape") && state == "pan") {
-        outerTempShape = document.createElement("div");
-        outerTempShape.style.position = "absolute";
-        outerTempShape.style.left = `${startX}`;
-        outerTempShape.style.top = `${startY}`;
-        outerTempShape.style.width = "fit-content";
-        outerTempShape.style.height = "fit-content";
+    else if (
+        state == "Line" &&
+        !e.target.matches("#toolbar") &&
+        !e.target.matches(".shape-btn") &&
+        !e.target.matches(".shape-btn svg")
+    ) {
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
         
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("width", "0");
-        svg.setAttribute("height", "0");
-        svg.setAttribute("viewBox", "25 0 0 0");
-
-        const d = "M 25 25";
-
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", d);
-        path.setAttribute("stroke", "black");
-        path.setAttribute("stroke-width", "0");
-        path.setAttribute("fill", "none");
-        path.setAttribute("stroke-linecap", "round");
-
-        svg.appendChild(path);
-        outerTempShape.appendChild(svg);
-        document.body.appendChild(outerTempShape);
+        lineShape = InitLine(startX, startY);
     }
+
+    // else if (e.target.matches(".shape") && state == "pan") {
+    //     outerTempShape = document.createElement("div");
+    //     outerTempShape.style.position = "absolute";
+    //     outerTempShape.style.left = `${startX}`;
+    //     outerTempShape.style.top = `${startY}`;
+    //     outerTempShape.style.width = "fit-content";
+    //     outerTempShape.style.height = "fit-content";
+        
+    //     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    //     svg.setAttribute("width", "0");
+    //     svg.setAttribute("height", "0");
+    //     svg.setAttribute("viewBox", "25 0 0 0");
+
+    //     const d = "M 25 25";
+
+    //     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    //     path.setAttribute("d", d);
+    //     path.setAttribute("stroke", "black");
+    //     path.setAttribute("stroke-width", "0");
+    //     path.setAttribute("fill", "none");
+    //     path.setAttribute("stroke-linecap", "round");
+
+    //     svg.appendChild(path);
+    //     outerTempShape.appendChild(svg);
+    //     document.body.appendChild(outerTempShape);
+    // }
 
     else if (e.target.matches(".shape") && state == "Pan") {
         const cont = e.target.closest(".cont");
@@ -195,7 +211,7 @@ document.addEventListener("touchstart", (e) => {
             whDot.style.pointerEvents = "none";
         }
         
-        shape = e.target;
+        shape = e.target.closest(".svg-cont");
         // cont.classList.add("selected");
     }
     initTouch = e.touches[0];
@@ -263,8 +279,18 @@ document.addEventListener("touchmove", (e) => {
         // path.setAttribute("stroke-width", strokeWidth);
         // path.setAttribute("stroke-dasharray", "4 4");
     }
+    else if (
+        state == "Line" &&
+        !e.target.matches("#toolbar") &&
+        !e.target.matches(".shape-btn") &&
+        !e.target.matches(".shape-btn svg")
+    ) {
+        const touch = e.touches[0];
+
+        DrawLine(startX, startY, touch, lineShape);
+    }
     
-    else if (e.target.matches(".shape") && state == "Pan") {
+    else if (e.target.matches(".shape") && state == "Pan" && shape.dataset.isLock == "false") {
         const touch = e.touches[0] || e.changedTouches[0];
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
@@ -845,6 +871,7 @@ function createRect(width, height, left, top) {
     cont.style.position = "absolute";
     cont.style.left = `${left}px`;
     cont.style.top = `${top}px`;
+    cont.setAttribute("data-is-lock", "false");
    
     const wDot = document.createElement("div");
     wDot.className = "w-dot dot";
@@ -913,6 +940,7 @@ function createCircle(width, height, left, top) {
     cont.style.position = "absolute";
     cont.style.left = `${left}px`;
     cont.style.top = `${top}px`;
+    cont.setAttribute("data-is-lock", "false");
     
     const wDot = document.createElement("div");
     wDot.className = "w-dot dot";
@@ -1048,4 +1076,58 @@ function createText(svgWidth, viewBox, d, left, top) {
     cont.appendChild(hDot);
     cont.appendChild(whDot);
     document.body.appendChild(cont);
+}
+
+function InitLine(initX, initY) {
+    outerTempShape = document.createElement("div");
+    outerTempShape.className = "cont line";
+    outerTempShape.style.position = "absolute";
+    outerTempShape.style.left = `${startX}px`;
+    outerTempShape.style.top = `${startY}px`;
+    outerTempShape.style.width = "fit-content";
+    outerTempShape.style.height = "fit-content";
+    outerTempShape.style.border = "2px dotted black";
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0");
+    svg.setAttribute("height", "0");
+    svg.setAttribute("veiwBox", `${initX} ${initY} 0 0`);
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("stroke", "black");
+    line.setAttribute("stroke-width", "5");
+    line.setAttribute("fill", "none");
+    line.setAttribute("x1", initX);
+    line.setAttribute("y1", initY);
+    line.setAttribute("x2", initX);
+    line.setAttribute("y2", initY);
+    line.setAttribute("stroke-dasharray", "4 4");
+
+    svg.appendChild(line);
+    outerTempShape.appendChild(svg);
+    document.body.appendChild(outerTempShape);
+
+    return outerTempShape;
+}
+
+function DrawLine(initX, initY ,touch, wrapper) {
+    const svg = wrapper.querySelector("svg");
+    const line = svg.querySelector("line");
+
+    let width = touch.clientX - initX;
+    let height = touch.clientY - initY;
+
+    svg.setAttribute("width", width);
+    svg.setAttribute("height", height);
+    svg.setAttribute("viewBox", `${initX} ${initY + (width / 2)} ${width} ${height}`)
+
+    let x1 = initX;
+    let y1 = initY;
+    let x2 = touch.clientX - initX;
+    let y2 = touch.clientY - initY;
+
+    line.setAttribute("x1", x1);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", width);
+    line.setAttribute("y2", height);
 }
