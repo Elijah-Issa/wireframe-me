@@ -7,11 +7,12 @@ let relXPos, relYPos;
 let initTouch;
 let differenceTouch = 0;
 let state;
-let startX, startY;      // where the touch started
+let startX, startY; // where the touch started
 let outerTempShape = null;
-let lineShape, angle;
 
 document.addEventListener("touchstart", (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
     if (
         state == "Rectangle" ||
         state == "Circle" &&
@@ -86,16 +87,12 @@ document.addEventListener("touchstart", (e) => {
         document.body.appendChild(outerTempShape);
     }
     else if (
-        state == "Line" &&
+        state == "Lasso" &&
         !e.target.matches("#toolbar") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
     ) {
-        const touch = e.touches[0];
-        startX = touch.clientX;
-        startY = touch.clientY;
-        
-        lineShape = InitLine(startX, startY);
+        Lasso(e);
     }
 
     else if (e.target.matches(".shape") && state == "Pan") {
@@ -189,6 +186,50 @@ document.addEventListener("touchstart", (e) => {
         shape = e.target.closest(".svg-cont");
         // cont.classList.add("selected");
     }
+    else if (e.target.matches(".line") && state == "Pan") {
+        shapebar.style.display = "flex";
+        const cont = e.target;
+        // const delBtn = cont.querySelector(".del-btn");
+        // const cpyBtn = cont.querySelector(".cpy-btn");
+        const wDot = cont.querySelector(".w-dot");
+        const hDot = cont.querySelector(".h-dot");
+
+        // cpyBtn.style.opacity = "1";
+        // cpyBtn.style.pointerEvents = "auto";
+        // delBtn.style.opacity = "1";
+        // delBtn.style.pointerEvents = "auto";
+        wDot.style.opacity = "1";
+        wDot.style.pointerEvents = "auto";
+        hDot.style.opacity = "1";
+        hDot.style.pointerEvents = "auto";
+
+        // isHolding = true;
+        const shapeInfo = e.target.getBoundingClientRect();
+        relXPos = e.touches[0].clientX - shapeInfo.left;
+        relYPos = e.touches[0].clientY - shapeInfo.top;
+            
+        if (shape && shape !== e.target.closest(".line")) {
+            // shape.classList.remove("selected");
+            // const delBtn = shape.querySelector(".del-btn");
+            // const cpyBtn = shape.querySelector(".cpy-btn");
+            const wDot = shape.querySelector(".w-dot");
+            const hDot = shape.querySelector(".h-dot");
+            const whDot = shape.querySelector(".w-h-dot");
+            // cpyBtn.style.opacity = "0";
+            // cpyBtn.style.pointerEvents = "none";
+            // delBtn.style.opacity = "0";
+            // delBtn.style.pointerEvents = "none";
+            wDot.style.opacity = "0";
+            wDot.style.pointerEvents = "none";
+            hDot.style.opacity = "0";
+            hDot.style.pointerEvents = "none";
+            whDot.style.opacity = "0";
+            whDot.style.pointerEvents = "none";
+        }
+        
+        shape = e.target.closest(".line");
+        // cont.classList.add("selected");
+    }
     initTouch = e.touches[0];
     differenceTouch = {
         w: e.touches[0].clientX,
@@ -254,17 +295,7 @@ document.addEventListener("touchmove", (e) => {
         // path.setAttribute("stroke-width", strokeWidth);
         // path.setAttribute("stroke-dasharray", "4 4");
     }
-    else if (
-        state == "Line" &&
-        !e.target.matches("#toolbar") &&
-        !e.target.matches(".shape-btn") &&
-        !e.target.matches(".shape-btn svg")
-    ) {
-        const touch = e.touches[0];
-
-        DrawLine(startX, startY, touch, lineShape);
-        agnle = RotateLine(startX, startY, e.touches[0], lineShape);
-    }
+    
     
     else if (e.target.matches(".shape") && state == "Pan" && shape.dataset.isLock == "false") {
         const touch = e.touches[0] || e.changedTouches[0];
@@ -340,13 +371,13 @@ document.addEventListener("touchmove", (e) => {
         actShape.style.width = `${normX}px`;
         actShape.style.height = `${normY}px`;
     }
-    else if (e.target.matches(".w-dot") && shape.classList.contains("svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
-        let svg = shape.querySelector("svg");
+    else if (e.target.matches(".w-dot") && !shape.classList.contains("line") && state == "Pan" && shape.dataset.isLock == "false") {
+        let svg = shape.querySelector('svg[data-type="text"]');
         let path = svg.querySelector("path");
         let dArr = path.getAttribute("d").split(" ");
         let x = Number(dArr[8]);
         let svgWidth = Number(svg.getAttribute("width"));
-        let vby = Number(svg.getAttribute("viewBox").split(" ")[3]);
+        // let vby = Number(svg.getAttribute("viewBox").split(" ")[3]);
             
         x += e.touches[0].clientX - differenceTouch.w;
         svgWidth += e.touches[0].clientX - differenceTouch.w;
@@ -354,29 +385,47 @@ document.addEventListener("touchmove", (e) => {
         let d = `M 25 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
        
         svg.setAttribute("width", svgWidth);
-        let vb = `25 0 ${svgWidth} ${vby}`;
+        let vb = `25 0 ${svgWidth} 50`;
         svg.setAttribute("viewBox", vb);
         
         path.setAttribute("d", d);
     }
-    else if (e.target.matches(".h-dot") && shape.classList.contains("svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
-        let svg = shape.querySelector("svg");
+    else if (e.target.matches(".h-dot") && !shape.classList.contains("line") && state == "Pan" && shape.dataset.isLock == "false") {
+        let svg = shape.querySelector('svg[data-type="text"]');
         let path = svg.querySelector("path");
-        let svgHeight = Number(svg.getAttribute("height"));
+        // let svgHeight = Number(svg.getAttribute("height"));
         let svgWidth = Number(svg.getAttribute("width"));
         let strokeWidth = Number(path.getAttribute("stroke-width"));
         let vby = Number(svg.getAttribute("viewBox").split(" ")[3]);
 
         strokeWidth += e.touches[0].clientY - differenceTouch.h;
-        svgHeight += e.touches[0].clientY - differenceTouch.h;
+        // svgHeight += e.touches[0].clientY - differenceTouch.h;
         vby += e.touches[0].clientY - differenceTouch.h;
 
         let vb = `25 0 ${svgWidth} ${svgHeight}`;
 
         path.setAttribute("stroke-width", strokeWidth);
-        svg.setAttribute("height", svgHeight);
+        // svg.setAttribute("height", svgHeight);
         svg.setAttribute("width", svgWidth);
         svg.setAttribute("viewBox", vb);
+    }
+    else if (e.target.matches(".w-dot") && shape.classList.contains("line") && state == "Pan" && shape.dataset.isLock == "false") {
+        let svg = shape.querySelector('svg[data-type="line"]');
+        let line = svg.querySelector("line");
+        let x2 = Number(line.getAttribute("x2"));
+
+        x2 += e.touches[0].clientX - differenceTouch.w;
+        line.setAttribute("x2", x2);
+        svg.setAttribute("width", x2);
+        svg.setAttribute("viewBox", `0 25 ${x2} 50`)
+    }
+    else if (e.target.matches(".h-dot") && shape.classList.contains("line") && state == "Pan" && shape.dataset.isLock == "false") {
+        let svg = shape.querySelector('svg[data-type="line"]');
+        let line = svg.querySelector("line");
+        let strokeWidth = Number(line.getAttribute("stroke-width"));
+
+        strokeWidth += e.touches[0].clientY - differenceTouch.h;
+        line.setAttribute("stroke-width", strokeWidth);
     }
     differenceTouch = {
         w: e.touches[0].clientX,
@@ -421,29 +470,7 @@ document.addEventListener("touchend", (e) => {
 
         const tempShapeLeft = outerTempShape.style.left.slice(0, outerTempShape.style.left.indexOf("p"));
         const tempShapeTop = outerTempShape.style.top.slice(0, outerTempShape.style.top.indexOf("p"));
-        createText(svgWidth=svg.getAttribute("width"), d=viewBoxAttr, viewBox=dAttr, left=tempShapeLeft, top=tempShapeTop);
-    }
-    else if (
-        state == "Line" &&
-        !e.target.matches("#toolbar") &&
-        !e.target.matches(".shape-btn") &&
-        !e.target.matches(".shape-btn svg")
-    ) {
-        const svg = outerTempShape.querySelector("svg");
-        const line = svg.querySelector("line");
-        
-        const tempShapeLeft = outerTempShape.style.left.slice(0, outerTempShape.style.left.indexOf("p"));
-        const tempShapeTop = outerTempShape.style.top.slice(0, outerTempShape.style.top.indexOf("p"));
-
-        const x1 = line.getAttribute("x1");
-        const y1 = line.getAttribute("y1");
-        const x2 = line.getAttribute("x2");
-        const y2 = line.getAttribute("y2");
-
-        const width = svg.getAttribute("width");
-        const viewBox = svg.getAttribute("viewBox");
-
-        createLine(angle, x1, y1, x2, y2, tempShapeLeft, tempShapeTop, width, `0 0 ${width} 10`);
+        createText(svgWidth=svg.getAttribute("width"), strokeWidth="3", d=viewBoxAttr, viewBox=dAttr, left=tempShapeLeft, top=tempShapeTop);
     }
     if (outerTempShape) {
         outerTempShape.remove();
@@ -467,7 +494,7 @@ document.addEventListener("click", (e) => {
         lockIcon.style.display = "none";
     }
     
-    if (e.target.matches(".shape")) {
+    else if (e.target.matches(".shape")) {
         shape = e.target.closest(".cont");
         // shape.classList.add("selected");
         // const delBtn = shape.querySelector(".del-btn");
@@ -511,7 +538,7 @@ document.addEventListener("click", (e) => {
         !e.target.matches(".tool svg")
         // !e.target.matches(".create-tool")
     ) {
-        shape.classList.remove("selected");
+        // shape.classList.remove("selected");
         // const delBtn = shape.querySelector(".del-btn");
         // const cpyBtn = shape.querySelector(".cpy-btn");
         const wDot = shape.querySelector(".w-dot");
@@ -529,15 +556,15 @@ document.addEventListener("click", (e) => {
         whDot.style.pointerEvents = "none";
     }
     
-    else if (e.target.matches(".show-create-dr-btn") || e.target.closest(".dr-btn-bg")) {
-        if (!crDrawer.classList.contains("show-cr-drawer")) {
-            crDrawer.classList.add("show-cr-drawer");
-            crDrBtn.classList.add("rotate-btn");
-        } else if (crDrawer.classList.contains("show-cr-drawer")) {
-            crDrawer.classList.remove("show-cr-drawer");
-            crDrBtn.classList.remove("rotate-btn");
-        }
-    }
+    // else if (e.target.matches(".show-create-dr-btn") || e.target.closest(".dr-btn-bg")) {
+    //     if (!crDrawer.classList.contains("show-cr-drawer")) {
+    //         crDrawer.classList.add("show-cr-drawer");
+    //         crDrBtn.classList.add("rotate-btn");
+    //     } else if (crDrawer.classList.contains("show-cr-drawer")) {
+    //         crDrawer.classList.remove("show-cr-drawer");
+    //         crDrBtn.classList.remove("rotate-btn");
+    //     }
+    // }
     
     
     
@@ -844,13 +871,74 @@ function LockShape(target) {
     shapeIcon.style.pointerEvents = "auto";
 }
 
+function DeleteShape(shape) {
+    if (!shape) return;
+
+    shape.remove();
+    shape = null;
+}
+
+function BringToFront(shape) {
+    if (!shape) return;
+
+    let shapeZIndex = Number(shape.style.zIndex);
+    shapeZIndex++;
+    shape.style.zIndex = shapeZIndex;
+}
+
+function SendToBack(shape) {
+    if (!shape) return;
+
+    let shapeZIndex = Number(shape.style.zIndex);
+    shapeZIndex--;
+    shape.style.zIndex = shapeZIndex;
+}
+
+function CopyShape(shape) {
+    if (!shape) return;
+
+    if (shape.classList.contains("rect")) {
+        const w = shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p"));
+        const h = shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p"));
+        const l = Number(shape.style.left.slice(0, shape.style.left.indexOf("p"))) + 25;
+        const t = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 25;
+        createRect(w, h, l, t);
+    }
+    else if (shape.classList.contains("circle")) {
+        const w = shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p"));
+        const h = shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p"));
+        const l = Number(shape.style.left.slice(0, shape.style.left.indexOf("p"))) + 25;
+        const t = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 25;
+        createCircle(w, h, l, t);
+    }
+    else if (shape.classList.contains("text")) {
+        const svgWidth = shape.querySelector('svg[data-type="text"]').getAttribute("width");
+        const viewBox = shape.querySelector('svg[data-type="text"]').getAttribute("viewBox");
+        const strokeWidth = shape.querySelector('svg[data-type="text"] path').getAttribute("stroke-width");
+        const d = shape.querySelector('svg[data-type="text"] path').getAttribute("d");
+        const l = Number(shape.style.left.slice(0, shape.style.left.indexOf("p"))) + 25;
+        const t = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 25;
+        createText(svgWidth, strokeWidth, viewBox, d, l, t);
+    }
+    else if (shape.classList.contains("line")) {
+        const lineWidth = shape.querySelector('svg[data-type="line"] line').getAttribute("x2");
+        const strokeWidth = shape.querySelector('svg[data-type="line"] line').getAttribute("stroke-width");
+        const l = Number(shape.style.left.slice(0, shape.style.left.indexOf("p"))) + 25;
+        const t = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 25;
+        console.log(l, t);
+        createLine(lineWidth, strokeWidth, `${l}px`, `${t}px`);
+    }
+}
+
 shapebar.addEventListener("click", (e) => {
     if (e.target.closest(".sh-tool") == null) return;
 
     shapeBtn = e.target.closest(".sh-tool");
-    if (shapeBtn.classList.contains("lock-btn")) {
-        LockShape(shape);
-    }
+    if (shapeBtn.classList.contains("lock-btn")) LockShape(shape);
+    else if (shapeBtn.classList.contains("delete-btn")) DeleteShape(shape);
+    else if (shapeBtn.classList.contains("b-t-f-btn")) BringToFront(shape);
+    else if (shapeBtn.classList.contains("s-t-b-btn")) SendToBack(shape);
+    else if (shapeBtn.classList.contains("copy-btn")) CopyShape(shape);
 });
 
 
@@ -880,6 +968,7 @@ function updateUI(activeBtn) {
 
 toolbar.addEventListener('click', e => {
     if (e.target.closest(".tool") == null) return;
+    else if (e.target.closest(".line-btn")) createLine(200, 3, "50%", "50%");
     const tgt = e.target.closest('.tool');
     if (tgt) updateUI(tgt);
 });
@@ -898,6 +987,7 @@ function createRect(width, height, left, top) {
     cont.style.position = "absolute";
     cont.style.left = `${left}px`;
     cont.style.top = `${top}px`;
+    cont.style.zIndex = "0";
     cont.setAttribute("data-is-lock", "false");
     
     cont.innerHTML += `
@@ -975,6 +1065,7 @@ function createCircle(width, height, left, top) {
     cont.style.position = "absolute";
     cont.style.left = `${left}px`;
     cont.style.top = `${top}px`;
+    cont.style.zIndex = "0";
     cont.setAttribute("data-is-lock", "false");
 
     cont.innerHTML += `
@@ -1043,20 +1134,22 @@ function createCircle(width, height, left, top) {
     document.body.appendChild(cont);
 }
 
-function createText(svgWidth, viewBox, d, left, top) {
+function createText(svgWidth, strokeWidth, viewBox, d, left, top) {
     const cont = document.createElement("div");
-    cont.className = "svg-cont";
+    cont.className = "svg-cont text";
     cont.style.padding = "1rem";
     cont.style.width = "fit-content";
     cont.style.height = "fit-content";
     cont.style.position = "absolute";
     cont.style.left = `${left}px`;
     cont.style.top = `${top}px`;
+    cont.style.zIndex = "0";
+    // cont.style.border = "2px dotted black";
     cont.setAttribute("data-is-lock", "false");
 
     cont.innerHTML += `
         <div class="shape-lock-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" height="34px" viewBox="0 -960 960 960" width="34px" fill="#000000">
+            <svg data-type="icon" xmlns="http://www.w3.org/2000/svg" height="34px" viewBox="0 -960 960 960" width="34px" fill="#000000">
                 <path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/>
             </svg>
         </div>
@@ -1067,7 +1160,7 @@ function createText(svgWidth, viewBox, d, left, top) {
     wDot.style.width = "15px";
     wDot.style.height = "15px";
     wDot.style.borderRadius = "50px";
-    wDot.style.backgroundColor = "black";
+    wDot.style.backgroundColor = "gray";
     wDot.style.position = "absolute";
     const w =15 / 2;
     wDot.style.right = `calc(1rem - ${w}px)`;
@@ -1081,7 +1174,7 @@ function createText(svgWidth, viewBox, d, left, top) {
     hDot.style.width = "15px";
     hDot.style.height = "15px";
     hDot.style.borderRadius = "50px";
-    hDot.style.backgroundColor = "black";
+    hDot.style.backgroundColor = "gray";
     hDot.style.position = "absolute";
     const h =15 / 2;
     hDot.style.bottom = `calc(1rem - ${h}px)`;
@@ -1106,17 +1199,20 @@ function createText(svgWidth, viewBox, d, left, top) {
     whDot.style.pointerEvents = "none";
     
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("data-type", "text");
     svg.setAttribute("width", svgWidth);
     svg.setAttribute("height", "50");
     svg.setAttribute("viewBox", viewBox);
     svg.style.pointerEvents = "none";
+    svg.style.display = "block";
+    svg.style.overflow = "visible";
     
     // const d = "M 25 25 c 50 -25 50 25 100 0";
     
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", d);
     path.setAttribute("stroke", "black");
-    path.setAttribute("stroke-width", "3");
+    path.setAttribute("stroke-width", strokeWidth);
     path.setAttribute("fill", "none");
     path.setAttribute("stroke-linecap", "round");
     path.style.pointerEvents = "none";
@@ -1129,104 +1225,122 @@ function createText(svgWidth, viewBox, d, left, top) {
     document.body.appendChild(cont);
 }
 
-function InitLine(initX, initY) {
-    outerTempShape = document.createElement("div");
-    outerTempShape.className = "cont line";
-    outerTempShape.style.position = "absolute";
-    outerTempShape.style.left = `${initX}px`;
-    outerTempShape.style.top = `${initY}px`;
-    outerTempShape.style.width = "fit-content";
-    outerTempShape.style.height = "fit-content";
-    outerTempShape.style.border = "2px dotted black";
-
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", "0");
-    svg.setAttribute("height", "10");
-    svg.setAttribute("veiwBox", `0 0 0 10`);
-
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("stroke", "black");
-    line.setAttribute("stroke-width", "3");
-    line.setAttribute("fill", "none");
-    // line.setAttribute("x1", initX);
-    // line.setAttribute("y1", initY);
-    // line.setAttribute("x2", initX);
-    // line.setAttribute("y2", initY);
-    line.setAttribute("stroke-dasharray", "4 4");
-
-    svg.appendChild(line);
-    outerTempShape.appendChild(svg);
-    document.body.appendChild(outerTempShape);
-
-    return outerTempShape;
-}
-
-function DrawLine(initX, initY ,touch, wrapper) {
-    const svg = wrapper.querySelector("svg");
-    const line = svg.querySelector("line");
-
-    let width = touch.clientX - initX;
-
-    if (width < 0) {
-        wrapper.style.left = `${touch.clientX}px`;
-        width *= -1;
-    }
-    // let height = touch.clientY - initY;
-
-    svg.setAttribute("width", width);
-    // svg.setAttribute("viewBox", `${width / 2} 5 ${width} 5`)
-    svg.setAttribute("viewBox", `0 0 ${width} 10`);
-
-    // let x1 = initX;
-    // let y1 = initY;
-    // let x2 = touch.clientX - initX;
-    // let y2 = touch.clientY - initY;
-
-    line.setAttribute("x1", 0);
-    line.setAttribute("y1", "5");
-    line.setAttribute("x2", width);
-    line.setAttribute("y2", "5");
-}
-
-function RotateLine(initX, initY, touch, wrapper) {
-    if (!wrapper) return;
-    
-    const dx = touch.clientX - initX;
-    const dy = touch.clientY - initY;
-
-    let angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-    if (angle < 0) angle += 360;
-
-    wrapper.style.transform = `rotate(${angle}deg)`;
-
-    return angle;
-}
-
-function createLine(angle, x1, y1, x2, y2, left, top, width, viewBox) {
+function createLine(lineWidth, strokeWidth, left, top) {
     const wrapper = document.createElement("div");
-    wrapper.className = "cont line";
+    wrapper.className = "svg-cont line";
+    wrapper.setAttribute("data-is-lock", "false");
     Object.assign(wrapper.style, {
         position: "absolute",
-        left: `${left}px`,
-        top: `${top}px`,
+        left: left,
+        top: top,
         width: "fit-content",
         height: "fit-content",
-        transform: `rotate(${angle}deg)`,
+        zIndex: "0",
+        // border: "2px dotted black",
     });
 
+    wrapper.innerHTML += `
+        <div class="shape-lock-icon">
+            <svg data-type="icon" xmlns="http://www.w3.org/2000/svg" height="34px" viewBox="0 -960 960 960" width="34px" fill="#000000">
+                <path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/>
+            </svg>
+        </div>
+    `
+
+    const wDot = document.createElement("div");
+    wDot.className = "w-dot dot";
+    wDot.style.width = "15px";
+    wDot.style.height = "15px";
+    wDot.style.borderRadius = "50px";
+    wDot.style.backgroundColor = "gray";
+    wDot.style.position = "absolute";
+    const w =15 / 2;
+    // wDot.style.right = `calc(1rem - ${w}px)`;
+    wDot.style.right = "-25px";
+    wDot.style.top = "50%";
+    wDot.style.transform = "translateY(-50%)";
+    wDot.style.opacity = "0";
+    wDot.style.pointerEvents = "none";
+    
+    const hDot = document.createElement("div");
+    hDot.className = "h-dot dot";
+    hDot.style.width = "15px";
+    hDot.style.height = "15px";
+    hDot.style.borderRadius = "50px";
+    hDot.style.backgroundColor = "gray";
+    hDot.style.position = "absolute";
+    const h =15 / 2;
+    // hDot.style.bottom = `calc(1rem - ${h}px)`;
+    hDot.style.bottom = "-2.5px"
+    hDot.style.left = "50%";
+    hDot.style.transform = "translateX(-50%)";
+    hDot.style.opacity = "0";
+    hDot.style.pointerEvents = "none";
+
+    const whDot = document.createElement("div");
+    whDot.className = "w-h-dot dot";
+    whDot.style.display = "none";
+    whDot.style.width = "15px";
+    whDot.style.height = "15px";
+    whDot.style.borderRadius = "50px";
+    whDot.style.backgroundColor = "black";
+    whDot.style.position = "absolute";
+    const wh = 15 / 2;
+    whDot.style.right = `calc(2rem - ${wh}%)`;
+    whDot.style.bottom = "1rem";
+    whDot.style.transform = "translateY(-50%)";
+    whDot.style.opacity = "0";
+    whDot.style.pointerEvents = "none";
+
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", width);
-    svg.setAttribute("height", "10");
-    svg.setAttribute("viewBox", viewBox);
+    svg.setAttribute("data-type", "line");
+    svg.setAttribute("width", lineWidth);
+    svg.setAttribute("height", "50");
+    svg.setAttribute("viewBox", `0 25 ${lineWidth} 50`);
+    svg.style.pointerEvents = "none";
+    svg.style.display = "block";
+    svg.style.overflow = "visible";
 
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", x1);
-    line.setAttribute("y1", y1);
-    line.setAttribute("x2", x2);
-    line.setAttribute("y2", y2);
+    line.setAttribute("x1", "0");
+    line.setAttribute("y1", "50");
+    line.setAttribute("x2", lineWidth);
+    line.setAttribute("y2", "50");
+    line.setAttribute("stroke", "black");
+    line.setAttribute("stroke-width", strokeWidth);
+    line.setAttribute("stroke-linecap", "round");
+    line.style.pointerEvents = "none";
 
     svg.appendChild(line);
     wrapper.appendChild(svg);
+    wrapper.appendChild(wDot);
+    wrapper.appendChild(hDot);
+    wrapper.appendChild(whDot);
     document.body.appendChild(wrapper);
+}
+
+function Lasso(e) {
+    outerTempShape = document.createElement("div");
+    Object.assign(outerTempShape.style, {
+        position: "absolute",
+        left: `${startX}px`,
+        top: `${startY}px`,
+        width: "fit-content",
+        height: "fit-content",
+    });
+    
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.style.display = "block";
+    svg.style.overflow = "visible";
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("stroke", "black");
+    path.setAttribute("stroke-width", "3");
+
+    const d = `M 1 1 L${e.touches[0].clientX} 100`;
+    path.setAttribute("d", d);
+
+    svg.appendChild(path);
+    outerTempShape.appendChild(svg);
+    document.body.appendChild(outerTempShape);
 }
