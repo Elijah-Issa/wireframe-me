@@ -9,10 +9,12 @@ let differenceTouch = 0;
 let state;
 let startX, startY; // where the touch started
 let outerTempShape = null;
+let commentState = "NoTyping";
 
 document.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
+
     if (
         state == "Rectangle" ||
         state == "Circle" &&
@@ -230,6 +232,15 @@ document.addEventListener("touchstart", (e) => {
         shape = e.target.closest(".line");
         // cont.classList.add("selected");
     }
+    else if (e.target.closest(".comment-cont") && state == "Pan") {
+        const shapeInfo = e.target.closest(".comment-cont").getBoundingClientRect();
+        relXPos = e.touches[0].clientX - shapeInfo.left;
+        relYPos = e.touches[0].clientY - shapeInfo.top;
+
+        if (shape !== e.target.closest(".comment-cont")) {
+            shape = e.target.closest(".comment-cont");
+        }
+    }
     initTouch = e.touches[0];
     differenceTouch = {
         w: e.touches[0].clientX,
@@ -237,9 +248,6 @@ document.addEventListener("touchstart", (e) => {
     };
 });
 
-// let lockX = true;
-// let lockY = true;
-// let normDx = 0;
 document.addEventListener("touchmove", (e) => {
     if (
         state == "Rectangle" ||
@@ -311,38 +319,13 @@ document.addEventListener("touchmove", (e) => {
         shape.style.left = `${xPos}px`;
         shape.style.top = `${yPos}px`;
     }
-    // else if (e.target.matches("svg") && state == "move") {
-    //     const touch = e.touches[0] || e.changedTouches[0];
-    //     let xPos = touch.clientX - relXPos;
-    //     let yPos = touch.clientY - relYPos;
-    //     e.target.style.left = `${xPos}px`;
-    //     e.target.style.top = `${yPos}px`;
-    // }
-    // else if (e.target.matches("svg") && state == "edit") {
-    //     let path = shape.querySelector("path");
-    //     let dArr = path.getAttribute("d").split(" ");
-    //  `   let x = Number(dArr[8]);
-    //     let svgWidth = Number(shape.getAttribute("width"));
-            
-    //     if (e.touches[0].clientX > initTouch.clientX && !lockX) {
-    //         x += 1;
-    //         svgWidth += 1;
-    //     }
-    //     if (e.touches[0].clientX < initTouch.clientX && !lockX) {
-    //         x -= 1;
-    //         svgWidth -= 1;
-    //     }
-        
-    //     let d = `M 0 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
-       
-    //     shape.setAttribute("width", svgWidth);
-    //     let vb = `0 0 ${svgWidth} 60`;    
-    //     shape.setAttribute("viewBox", vb);
-        
-    //     path.setAttribute("d", d);
-        
-    //     widthInput.value = x;
-    // }
+    else if (e.target.closest(".comment-cont") && state == "Pan") {
+        const touch = e.touches[0] || e.changedTouches[0];
+        let xPos = touch.clientX - relXPos;
+        let yPos = touch.clientY - relYPos;
+        shape.style.left = `${xPos}px`;
+        shape.style.top = `${yPos}px`;
+    }
     
     else if (e.target.matches(".w-dot") && !shape.classList.contains("svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
         const cont = e.target.closest(".cont");
@@ -531,13 +514,16 @@ document.addEventListener("click", (e) => {
     }
     else if (
         shape &&
+        state != "Comment" &&
         !e.target.matches(".svg-cont") &&
         !e.target.matches(".shape") &&
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".tool") &&
+        !e.target.closest(".comment-cont") &&
         !e.target.matches(".tool svg")
         // !e.target.matches(".create-tool")
     ) {
+
         // shape.classList.remove("selected");
         // const delBtn = shape.querySelector(".del-btn");
         // const cpyBtn = shape.querySelector(".cpy-btn");
@@ -860,6 +846,14 @@ document.addEventListener("click", (e) => {
             document.body.appendChild(cont);
         }
     }
+    else if (
+        state == "Comment" &&
+        !e.target.matches("#toolbar") &&
+        !e.target.matches(".shape-btn") &&
+        !e.target.matches(".shape-btn svg")
+    ) {
+        createComment(e);
+    }
 });
 
 function LockShape(target) {
@@ -940,6 +934,27 @@ shapebar.addEventListener("click", (e) => {
     else if (shapeBtn.classList.contains("s-t-b-btn")) SendToBack(shape);
     else if (shapeBtn.classList.contains("copy-btn")) CopyShape(shape);
 });
+
+// document.addEventListener("keyup", (e) => {
+//     if (
+//         // shape &&
+//         commentState == "Typing" &&
+//         shape.classList.contains("comment-cont")
+//     ) {
+//         if (shape.dataset.deleteHintMessage == "true") {
+//             shape.querySelector(".comment").innerText = "";
+//             shape.setAttribute("data-delete-hint-message", "false");
+//         }
+//         if (e.shiftKey) {
+//             shape.querySelector(".comment").innerText += !e.key? "f" : e.key.toLowerCase();
+//             console.log("e.shiftKey")
+//         }
+//         else if (!e.shiftKey) {
+//             shape.querySelector(".comment").innerText += e.key;
+//             console.log("!e.shiftKey")
+//         }
+//     }
+// });
 
 
 
@@ -1343,4 +1358,49 @@ function Lasso(e) {
     svg.appendChild(path);
     outerTempShape.appendChild(svg);
     document.body.appendChild(outerTempShape);
+}
+
+function createComment(e) {
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("data-delete-hint-message", "true");
+    wrapper.className = "comment-cont";
+    Object.assign(wrapper.style, {
+        position: "absolute",
+        left: `${e.clientX}px`,
+        top: `${e.clientY}px`,
+        width: "fit-content",
+        height: "fit-content",
+        border: "2px solid black",
+        borderRadius: "8px",
+    });
+
+    const comment = document.createElement("p");
+    comment.className = "comment";
+    comment.innerText = "This is a Comment";
+    Object.assign(comment.style, {
+        padding: "0.5rem 1rem",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        fontSize: "1.2rem",
+    });
+    comment.contentEditable = true;
+
+    const wDot = document.createElement("div");
+    wDot.className = "w-dot";
+    wDot.style.display = "none";
+    const hDot = document.createElement("div");
+    hDot.className = "h-dot";
+    hDot.style.display = "none";
+    const whDot = document.createElement("div");
+    whDot.className = "w-h-dot";
+    whDot.style.display = "none";
+
+    wrapper.appendChild(comment);
+    wrapper.appendChild(wDot);
+    wrapper.appendChild(hDot);
+    wrapper.appendChild(whDot);
+    document.body.appendChild(wrapper);
+
+    commentState = "Opened";
+    shape = wrapper;
 }

@@ -132,20 +132,6 @@ body {
 }
 
 
-/* .sh-tool svg {
-    width: 26px;
-    height: 26px;
-    stroke: #333;
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    transition: stroke .25s ease;
-} */
-
-
-
-
-
 
 .cont, .svg-cont {
     transition: border 0.3s ease-in-out;
