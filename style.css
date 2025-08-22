@@ -160,3 +160,19 @@ body {
     pointer-events: none;
     border-radius: 6px;
 }
+
+.comment-bar {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+}
+.comment-bar button {
+    border-color: transparent;
+    padding: 1rem 1.5rem;
+    background-color: blueviolet;
+    font-weight: bold;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    color: white;
+}

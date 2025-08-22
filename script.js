@@ -9,7 +9,6 @@ let differenceTouch = 0;
 let state;
 let startX, startY; // where the touch started
 let outerTempShape = null;
-let commentState = "NoTyping";
 
 document.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
@@ -476,6 +475,28 @@ document.addEventListener("click", (e) => {
         lockIcon.style.pointerEvents = "none";
         lockIcon.style.display = "none";
     }
+
+    else if (e.target.matches(".comment-x-icon") || e.target.closest(".comment-x-icon")) {
+        if (!shape) return;
+
+        e.target.closest(".comment-x-icon").style.display = "none";
+        shape.querySelector(".inner-comment-wrapper").style.display = "none";
+        shape.dataset.commentState = "closed";
+    }
+    else if (e.target.matches(".comment-icon-wrapper") || e.target.closest(".comment-icon-wrapper")) {
+        const comment = e.target.closest(".comment-icon-wrapper");
+        const overallWrapper = comment.closest(".comment-overall-wrapper");
+        overallWrapper.querySelector(".inner-comment-wrapper").style.display = "flex";
+        overallWrapper.querySelector(".comment-x-icon").style.display = "flex";
+        overallWrapper.dataset.commentState = "closed";
+    }
+
+    else if (e.target.matches(".comment-delete-btn")) {
+        if (!shape || !shape.classList.contains("comment-cont")) return;
+
+        shape.remove();
+        shape = null;
+    }
     
     else if (e.target.matches(".shape")) {
         shape = e.target.closest(".cont");
@@ -935,27 +956,6 @@ shapebar.addEventListener("click", (e) => {
     else if (shapeBtn.classList.contains("copy-btn")) CopyShape(shape);
 });
 
-// document.addEventListener("keyup", (e) => {
-//     if (
-//         // shape &&
-//         commentState == "Typing" &&
-//         shape.classList.contains("comment-cont")
-//     ) {
-//         if (shape.dataset.deleteHintMessage == "true") {
-//             shape.querySelector(".comment").innerText = "";
-//             shape.setAttribute("data-delete-hint-message", "false");
-//         }
-//         if (e.shiftKey) {
-//             shape.querySelector(".comment").innerText += !e.key? "f" : e.key.toLowerCase();
-//             console.log("e.shiftKey")
-//         }
-//         else if (!e.shiftKey) {
-//             shape.querySelector(".comment").innerText += e.key;
-//             console.log("!e.shiftKey")
-//         }
-//     }
-// });
-
 
 
 // toolbar Logic
@@ -1361,17 +1361,67 @@ function Lasso(e) {
 }
 
 function createComment(e) {
-    const wrapper = document.createElement("div");
-    wrapper.setAttribute("data-delete-hint-message", "true");
-    wrapper.className = "comment-cont";
-    Object.assign(wrapper.style, {
+    const overallWrapper = document.createElement("div");
+    overallWrapper.setAttribute("data-comment-state", "true");
+    overallWrapper.className = "comment-overall-wrapper comment-cont";
+    Object.assign(overallWrapper.style, {
         position: "absolute",
+        width: "fit-content",
+        height: "fit-content",
         left: `${e.clientX}px`,
         top: `${e.clientY}px`,
+    });
+
+    const iconWrapper = document.createElement("div");
+    iconWrapper.className = "comment-icon-wrapper";
+    Object.assign(iconWrapper.style, {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        position: "absolute",
+        width: "30px",
+        height: "30px",
+        left: "0",
+        top: "-32px",
+        border: "2px solid black",
+        borderRadius: "6px",
+    });
+
+    iconWrapper.innerHTML = `
+        <svg data-type="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000">
+            <path d="M240-400h480v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM880-80 720-240H160q-33 0-56.5-23.5T80-320v-480q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v720ZM160-320h594l46 45v-525H160v480Zm0 0v-480 480Z"/>
+        </svg>
+    `; 
+
+    const xIcon = document.createElement("div");
+    xIcon.className = "comment-x-icon";
+    Object.assign(xIcon.style, {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        position: "absolute",
+        right: "0",
+        top: "-32px",
+        border: "2px solid black",
+        borderRadius: "8px",
+        width: "30px",
+        height: "30px",
+    });
+
+    xIcon.innerHTML = `
+        <svg data-type="icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000">
+            <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
+        </svg>
+    `;
+    
+    const wrapper = document.createElement("div");
+    wrapper.className = "inner-comment-wrapper";
+    Object.assign(wrapper.style, {
         width: "fit-content",
         height: "fit-content",
         border: "2px solid black",
-        borderRadius: "8px",
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        color: "white",
     });
 
     const comment = document.createElement("p");
@@ -1395,12 +1445,17 @@ function createComment(e) {
     whDot.className = "w-h-dot";
     whDot.style.display = "none";
 
+
     wrapper.appendChild(comment);
     wrapper.appendChild(wDot);
     wrapper.appendChild(hDot);
     wrapper.appendChild(whDot);
-    document.body.appendChild(wrapper);
 
-    commentState = "Opened";
+    overallWrapper.appendChild(wrapper);
+    overallWrapper.appendChild(iconWrapper);
+    overallWrapper.appendChild(xIcon);
+
+    document.body.appendChild(overallWrapper);
+
     shape = wrapper;
 }
