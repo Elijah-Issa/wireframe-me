@@ -15,7 +15,7 @@ let differenceTouch = 0;
 let state;
 let startX, startY; // where the touch started
 let outerTempShape = null;
-let lasso, polyline, d;
+let lassoCont, lasso, polyline, d, line;
 // let lassoLine, lPath, ld;
 
 document.addEventListener("touchstart", (e) => {
@@ -101,7 +101,6 @@ document.addEventListener("touchstart", (e) => {
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
     ) {
-        // Lasso(e);
         lasso = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         lasso.style.display = "block";
         lasso.style.overflow = "visible";
@@ -114,21 +113,17 @@ document.addEventListener("touchstart", (e) => {
         polyline.setAttribute("points", d);
         polyline.setAttribute("stroke-dasharray", "4 4");
         
+        line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        line.setAttribute("fill", "none");
+        line.setAttribute("stroke", "black");
+        line.setAttribute("stroke-width", "3");
+        line.setAttribute("stroke-dasharray", "4 4");
+        line.setAttribute("d", `M ${startX} ${startY} L ${e.touches[0].clientX} ${e.touches[0].clientY}`)
+        lasso.appendChild(line);
+        
         lasso.appendChild(polyline);
+        lasso.appendChild(line);
         document.body.appendChild(lasso);
-
-        // lassoLine = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        // lassoLine.style.display = "block",
-        // lassoLine.style.overflow = "visible",
-
-        // lPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        // lPath.setAttribute("stroke", "black");
-        // lPath.setAttribute("fill", "none");
-        // ld = "M 0 0";
-        // lPath.setAttribute("d", d);
-
-        // lassoLine.appendChild(lPath);
-        // document.body.appendChild(lassoLine);
     }
 
     else if (e.target.matches(".shape") && state == "Pan") {
@@ -346,8 +341,7 @@ document.addEventListener("touchmove", (e) => {
         d += ` ${e.touches[0].clientX} ${e.touches[0].clientY}`;
         polyline.setAttribute("points", d);
 
-        // ld = `M ${startX} ${startY} l ${e.touches[0].clientX} ${e.touches[0].clientY}`
-        // lPath.setAttribute("d", ld);
+        line.setAttribute("d", `M ${startX} ${startY} L ${e.touches[0].clientX} ${e.touches[0].clientY}`);
     }
     
     
@@ -507,14 +501,20 @@ document.addEventListener("touchend", (e) => {
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
     ) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        line.setAttribute("fill", "none");
-        line.setAttribute("stroke", "black");
-        line.setAttribute("stroke-width", "3");
-        line.setAttribute("d", `M ${e.changedTouches[0].clientX} ${e.changedTouches[0].clientY} l ${startX} -${startY}`)
-        lasso.appendChild(line);
-        // lasso.remove();
-        // lassoLine.remove();
+        lasso.remove();
+        const lassoInfo = lasso.getBoundingClientRect();
+        const test = document.querySelector(".test");
+        const testInfo = document.querySelector(".test").getBoundingClientRect();
+
+        if (
+            lassoInfo.left < testInfo.left &&
+            lassoInfo.right > testInfo.right
+            // lassoInfo.top < testInfo.top &&
+            // lassoInfo.bottom < testInfo.bottom
+
+        ) {
+            test.style.border = "2px dotted red";
+        }
     }
     if (outerTempShape) {
         outerTempShape.remove();
