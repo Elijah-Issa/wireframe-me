@@ -1,3 +1,22 @@
+let createdShapes = [];
+let selectedShapes = [];
+
+document.addEventListener("keydown", e => {
+    if (e.key == "q") console.log(createdShapes);
+});
+
+const canvas = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+Object.assign(canvas.style, {
+  position: 'fixed',
+  inset: 0,
+  width: '100%',
+  height: '100%',
+  pointerEvents: 'none',   // we’ll toggle it per tool
+  zIndex: 9999,
+});
+canvas.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
+document.body.appendChild(canvas);
+
 const shapebar = document.getElementById("shapebar");
 const lock = document.querySelector(".lock-btn");
 
@@ -101,9 +120,15 @@ document.addEventListener("touchstart", (e) => {
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
     ) {
+        // document.body.style.touchAction = "none";
+        
         lasso = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        lasso.style.position = "fixed";
         lasso.style.display = "block";
         lasso.style.overflow = "visible";
+        // lasso.setAttribute("width", window.innerWidth);
+        // lasso.setAttribute("height", window.innerHeight);
+        // lasso.setAttribute("viewBox", `0 0 ${window.innerWidth} ${window.innerHeight}`);
 
         polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
         polyline.setAttribute("stroke", "black");
@@ -123,7 +148,7 @@ document.addEventListener("touchstart", (e) => {
         
         lasso.appendChild(polyline);
         lasso.appendChild(line);
-        document.body.appendChild(lasso);
+        canvas.appendChild(lasso);
     }
 
     else if (e.target.matches(".shape") && state == "Pan") {
@@ -466,7 +491,21 @@ document.addEventListener("touchend", (e) => {
     ) {
         const tempShapeWidth = outerTempShape.style.width.slice(0, outerTempShape.style.width.indexOf("p"));
         const tempShapeHeight = outerTempShape.style.height.slice(0, outerTempShape.style.height.indexOf("p"));
-        createRect(width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
+        const tempShapeLeft = outerTempShape.style.left.slice(0, outerTempShape.style.left.indexOf("p"));
+        const tempShapeTop = outerTempShape.style.top.slice(0, outerTempShape.style.top.indexOf("p"));
+        shape = createRect(width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
+        const info = shape.getBoundingClientRect();
+        const sh = {
+            type: "rect",
+            actualShape: shape.querySelector(".shape"),
+            left: info.left,
+            right: info.right,
+            top: info.top,
+            bottom: info.bottom,
+            width: info.width,
+            height: info.height,
+        };
+        createdShapes.push(sh);
     }
     else if (
         state != "Pan" &&
@@ -477,8 +516,20 @@ document.addEventListener("touchend", (e) => {
     ) {
         const tempShapeWidth = outerTempShape.style.width.slice(0, outerTempShape.style.width.indexOf("p"));
         const tempShapeHeight = outerTempShape.style.height.slice(0, outerTempShape.style.height.indexOf("p"));
-        createCircle(width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
-    }
+        shape = createCircle(width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
+        const info = shape.getBoundingClientRect();
+        const sh = {
+            type: "circle",
+            actualShape: shape.querySelector(".shape"),
+            left: info.left,
+            right: info.right,
+            top: info.top,
+            bottom: info.bottom,
+            width: info.width,
+            height: info.height,
+        };
+        createdShapes.push(sh);
+        console.log(createdShapes);}
     else if (
         state == "Text" &&
         !e.target.matches("#toolbar") &&
@@ -493,7 +544,20 @@ document.addEventListener("touchend", (e) => {
 
         const tempShapeLeft = outerTempShape.style.left.slice(0, outerTempShape.style.left.indexOf("p"));
         const tempShapeTop = outerTempShape.style.top.slice(0, outerTempShape.style.top.indexOf("p"));
-        createText(svgWidth=svg.getAttribute("width"), strokeWidth="3", d=viewBoxAttr, viewBox=dAttr, left=tempShapeLeft, top=tempShapeTop);
+        shape = createText(svgWidth=svg.getAttribute("width"), strokeWidth="3", d=viewBoxAttr, viewBox=dAttr, left=tempShapeLeft, top=tempShapeTop);
+        const info = shape.getBoundingClientRect();
+        const sh = {
+            type: "text",
+            actualShape: shape.querySelector(".svg-cont"),
+            left: info.left,
+            right: info.right,
+            top: info.top,
+            bottom: info.bottom,
+            width: info.width,
+            height: info.height,
+        };
+        createdShapes.push(sh);
+        console.log(createdShapes);
     }
     else if (
         state == "Lasso" &&
@@ -501,20 +565,40 @@ document.addEventListener("touchend", (e) => {
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
     ) {
-        lasso.remove();
-        const lassoInfo = lasso.getBoundingClientRect();
+        const lassoInfo = lasso.querySelector("svg polyline").getBoundingClientRect();
         const test = document.querySelector(".test");
         const testInfo = document.querySelector(".test").getBoundingClientRect();
 
+        createdShapes.forEach(sh => {
+            if (
+                lassoInfo.left < sh.left &&
+                lassoInfo.right > sh.right &&
+                lassoInfo.top < sh.top &&
+                lassoInfo.bottom > sh.bottom
+            ) {
+                // sh.actualShape.style.border = "2px dotted red";
+                selectedShapes.push(sh.actualShape);
+                shapebar.style.display = "flex";
+                // shape = test;
+            }
+            selectedShapes.forEach(sel => {
+                sel.style.border = "3px dotted red";
+            });
+            // console.log(selectedShapes)
+            lasso.remove();
+        });
+
         if (
             lassoInfo.left < testInfo.left &&
-            lassoInfo.right > testInfo.right
-            // lassoInfo.top < testInfo.top &&
-            // lassoInfo.bottom < testInfo.bottom
-
+            lassoInfo.right > testInfo.right &&
+            lassoInfo.top < testInfo.top &&
+            lassoInfo.bottom > testInfo.bottom
         ) {
             test.style.border = "2px dotted red";
+            shapebar.style.display = "flex";
+            shape = test;
         }
+        lasso.remove();
     }
     if (outerTempShape) {
         outerTempShape.remove();
@@ -595,6 +679,7 @@ document.addEventListener("click", (e) => {
         hDot.style.opacity = "1";
         hDot.style.pointerEvents = "auto";
     }
+
     else if (
         shape &&
         state != "Comment" &&
@@ -606,17 +691,9 @@ document.addEventListener("click", (e) => {
         !e.target.matches(".tool svg")
         // !e.target.matches(".create-tool")
     ) {
-
-        // shape.classList.remove("selected");
-        // const delBtn = shape.querySelector(".del-btn");
-        // const cpyBtn = shape.querySelector(".cpy-btn");
         const wDot = shape.querySelector(".w-dot");
         const hDot = shape.querySelector(".h-dot");
         const whDot = shape.querySelector(".w-h-dot");
-        // cpyBtn.style.opacity = "0";
-        // cpyBtn.style.pointerEvents = "none";
-        // delBtn.style.opacity = "0";
-        // delBtn.style.pointerEvents = "none";
         wDot.style.opacity = "0";
         wDot.style.pointerEvents = "none";
         hDot.style.opacity = "0";
@@ -624,311 +701,7 @@ document.addEventListener("click", (e) => {
         whDot.style.opacity = "0";
         whDot.style.pointerEvents = "none";
     }
-    
-    // else if (e.target.matches(".show-create-dr-btn") || e.target.closest(".dr-btn-bg")) {
-    //     if (!crDrawer.classList.contains("show-cr-drawer")) {
-    //         crDrawer.classList.add("show-cr-drawer");
-    //         crDrBtn.classList.add("rotate-btn");
-    //     } else if (crDrawer.classList.contains("show-cr-drawer")) {
-    //         crDrawer.classList.remove("show-cr-drawer");
-    //         crDrBtn.classList.remove("rotate-btn");
-    //     }
-    // }
-    
-    
-    
-    // else if (e.target.matches(".rect-btn") || e.target.matches(".rect-btn svg")) state = "rect";
-    // else if (e.target.matches(".circle-btn") || e.target.matches(".circle-btn svg")) state = "circle";
-    // else if (e.target.matches(".text-btn") || e.target.matches(".text-btn svg")) state = "text";
-    // else if (e.target.matches(".pan-btn") || e.target.matches(".pan-btn svg")) state = "pan";
 
-
-
-    // else if (e.target.matches(".del-btn")) {
-    //     if (!shape) {
-    //         alert("Select A shape Forst !");
-    //         return;
-    //     }
-        
-    //     shape.remove();
-    //     shape = null;
-    // }
-    else if (e.target.matches(".cpy-btn")) {
-        if (!shape) {
-            alert("Select A shape First !");
-            return;
-        }
-        if (shape.classList.contains("svg-cont")) {
-            let dArr = shape.querySelector("path").getAttribute("d").split(" ");
-            let x = Number(dArr[8]);
-            const wi = shape.querySelector("svg").getAttribute("width");
-            const he = shape.querySelector("svg").getAttribute("height");
-            const le = shape.style.left.slice(0, shape.style.left.indexOf("p"));
-            const to = shape.style.top.slice(0, shape.style.top.indexOf("p"));
-            const strokeWidth = Number(shape.querySelector("path").getAttribute("stroke-width"));
-            const vby = shape.querySelector("svg").getAttribute("viewBox").split(" ")[3];
-
-            const cont = document.createElement("div");
-            cont.className = "svg-cont svg";
-            cont.style.padding = "1rem";
-            cont.style.width = "fit-content";
-            cont.style.height = "fit-content";
-            cont.style.position = "absolute";
-            cont.style.left = `${Number(le) + 30}px`;
-            cont.style.top = `${Number(to) + 20}px`; 
-
-            const wDot = document.createElement("div");
-            wDot.className = "w-dot dot";
-            wDot.style.width = "15px";
-            wDot.style.height = "15px";
-            wDot.style.borderRadius = "50px";
-            wDot.style.backgroundColor = "black";
-            wDot.style.position = "absolute";
-            const w =15 / 2;
-            wDot.style.right = `calc(1rem - ${w}px)`;
-            wDot.style.top = "50%";
-            wDot.style.transform = "translateY(-50%)";
-            wDot.style.opacity = "0";
-            wDot.style.pointerEvents = "none";
-            
-            const hDot = document.createElement("div");
-            hDot.className = "h-dot dot";
-            hDot.style.width = "15px";
-            hDot.style.height = "15px";
-            hDot.style.borderRadius = "50px";
-            hDot.style.backgroundColor = "black";
-            hDot.style.position = "absolute";
-            const h =15 / 2;
-            hDot.style.bottom = `calc(1rem - ${h}px)`;
-            hDot.style.left = "50%";
-            hDot.style.transform = "translateX(-50%)";
-            hDot.style.opacity = "0";
-            hDot.style.pointerEvents = "none";
-            
-            const delBtn = document.createElement("div");
-            delBtn.className = "del-btn shape-btn";
-            delBtn.style.borderRadius = "8px";
-            delBtn.style.backgroundColor = "blueViolet";
-            delBtn.style.color = "white";
-            delBtn.style.padding = "0.3rem 0.5rem";
-            delBtn.style.position = "absolute";
-            delBtn.style.left = "10%";
-            delBtn.style.top = "-1.5rem";
-            delBtn.innerText = "Delete";
-            delBtn.style.opacity = "0";
-            delBtn.style.pointerEvents = "none";
-            
-            const cpyBtn = document.createElement("div");
-            cpyBtn.className = "cpy-btn shape-btn";
-            cpyBtn.style.borderRadius = "8px";
-            cpyBtn.style.backgroundColor = "blueViolet";
-            cpyBtn.style.color = "white";
-            cpyBtn.style.padding = "0.3rem 0.5rem";
-            cpyBtn.style.position = "absolute";
-            cpyBtn.style.right = "10%";
-            cpyBtn.style.top = "-1.5rem";
-            cpyBtn.innerText = "Copy";
-            cpyBtn.style.opacity = "0";
-            cpyBtn.style.pointerEvents = "none";
-        
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("width", `${Number(wi)}`);
-            svg.setAttribute("height", `${Number(he)}`);
-            svg.setAttribute("viewBox", `25 0 ${wi} ${Number(vby)}`);
-            svg.style.pointerEvents = "none";
-            
-            let d = `M 25 25 c ${x / 2} -25 ${x / 2} 25 ${x} 0`;
-            
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("d", d);
-            path.setAttribute("stroke", "black");
-            path.setAttribute("stroke-width", strokeWidth);
-            path.setAttribute("fill", "none");
-            path.setAttribute("stroke-linecap", "round");
-            path.style.pointerEvents = "none";
-            
-            svg.appendChild(path);
-            cont.appendChild(svg);
-            cont.appendChild(wDot);
-            cont.appendChild(hDot);
-            cont.appendChild(delBtn);
-            cont.appendChild(cpyBtn);
-            document.body.appendChild(cont);
-            crDrawer.classList.remove("show-drawer")
-        }
-        else if (shape.querySelector(".shape").classList.contains("rect")) {
-            const wi = shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p"));
-            const he = shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p"));
-            const le = shape.style.left.slice(0, shape.style.left.indexOf("p"));
-            const to = shape.style.top.slice(0, shape.style.top.indexOf("p"));
-        
-            const cont = document.createElement("div");
-            cont.className = "cont";
-            cont.style.padding = "1rem";
-            cont.style.width = "fit-content";
-            cont.style.height = "fit-content";
-            cont.style.position = "absolute";
-            cont.style.left = `${Number(le) + 30}px`;
-            cont.style.top = `${Number(to) + 20}px`
-        
-            const wDot = document.createElement("div");
-            wDot.className = "w-dot dot";
-            wDot.style.width = "15px";
-            wDot.style.height = "15px";
-            wDot.style.borderRadius = "50px";
-            wDot.style.backgroundColor = "black";
-            wDot.style.position = "absolute";
-            const w =15 / 2;
-            wDot.style.right = `calc(1rem - ${w}px)`;
-            wDot.style.top = "50%";
-            wDot.style.transform = "translateY(-50%)";
-            wDot.style.opacity = "0";
-            wDot.style.pointerEvents = "none";
-        
-            const hDot = document.createElement("div");
-            hDot.className = "h-dot dot";
-            hDot.style.width = "15px";
-            hDot.style.height = "15px";
-            hDot.style.borderRadius = "50px";
-            hDot.style.backgroundColor = "black";
-            hDot.style.position = "absolute";
-            const h =15 / 2;
-            hDot.style.bottom = `calc(1rem - ${h}px)`;
-            hDot.style.left = "50%";
-            hDot.style.transform = "translateX(-50%)";
-            hDot.style.opacity = "0";
-            hDot.style.pointerEvents = "none";
-        
-            const delBtn = document.createElement("div");
-            delBtn.className = "del-btn shape-btn";
-            delBtn.style.borderRadius = "8px";
-            delBtn.style.backgroundColor = "blueViolet";
-            delBtn.style.color = "white";
-            delBtn.style.padding = "0.3rem 0.5rem";
-            delBtn.style.position = "absolute";
-            delBtn.style.left = "10%";
-            delBtn.style.top = "-1.5rem";
-            delBtn.innerText = "Delete";
-            delBtn.style.opacity = "0";
-            delBtn.style.pointerEvents = "none";
-        
-            const cpyBtn = document.createElement("div");
-            cpyBtn.className = "cpy-btn shape-btn";
-            cpyBtn.style.borderRadius = "8px";
-            cpyBtn.style.backgroundColor = "blueViolet";
-            cpyBtn.style.color = "white";
-            cpyBtn.style.padding = "0.3rem 0.5rem";
-            cpyBtn.style.position = "absolute";
-            cpyBtn.style.right = "10%";
-            cpyBtn.style.top = "-1.5rem";
-            cpyBtn.innerText = "Copy";
-            cpyBtn.style.opacity = "0";
-            cpyBtn.style.pointerEvents = "none";
-    
-            const rect = document.createElement("div");
-            rect.className = "shape rect";
-            rect.style.border = "2px solid black";
-            rect.style.width = `${Number(wi)}px`;
-            rect.style.height = `${Number(he)}px`;
-            rect.style.left = `${clientX}px`;
-            rect.style.top = `${clientY}px`;
-            rect.style.borderRadius = "8px";
-        
-            cont.appendChild(rect);
-            cont.appendChild(wDot);
-            cont.appendChild(hDot);
-            cont.appendChild(delBtn);
-            cont.appendChild(cpyBtn);
-            document.body.appendChild(cont);
-        }
-        else if (shape.querySelector(".shape").classList.contains("circle")) {
-            const wi = shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p"));
-            const he = shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p"));
-            const le = shape.style.left.slice(0, shape.style.left.indexOf("p"));
-            const to = shape.style.top.slice(0, shape.style.top.indexOf("p"));
-        
-            const cont = document.createElement("div");
-            cont.className = "cont";
-            cont.style.padding = "1rem";
-            cont.style.width = "fit-content";
-            cont.style.height = "fit-content";
-            cont.style.position = "absolute";
-            cont.style.left = `${Number(le) + 30}px`;
-            cont.style.top = `${Number(to) + 20}px`;
-            cont.style.boxSizing = "border-box";
-        
-            const wDot = document.createElement("div");
-            wDot.className = "w-dot dot";
-            wDot.style.width = "15px";
-            wDot.style.height = "15px";
-            wDot.style.borderRadius = "50px";
-            wDot.style.backgroundColor = "black";
-            wDot.style.position = "absolute";
-            const w =15 / 2;
-            wDot.style.right = `calc(1rem - ${w}px)`;
-            wDot.style.top = "50%";
-            wDot.style.transform = "translateY(-50%)";
-            wDot.style.opacity = "0";
-            wDot.style.pointerEvents = "none";
-        
-            const hDot = document.createElement("div");
-            hDot.className = "h-dot dot";
-            hDot.style.width = "15px";
-            hDot.style.height = "15px";
-            hDot.style.borderRadius = "50px";
-            hDot.style.backgroundColor = "black";
-            hDot.style.position = "absolute";
-            const h =15 / 2;
-            hDot.style.bottom = `calc(1rem - ${h}px)`;
-            hDot.style.left = "50%";
-            hDot.style.transform = "translateX(-50%)";
-            hDot.style.opacity = "0";
-            hDot.style.pointerEvents = "none";
-        
-            const delBtn = document.createElement("div");
-            delBtn.className = "del-btn shape-btn";
-            delBtn.style.borderRadius = "8px";
-            delBtn.style.backgroundColor = "blueViolet";
-            delBtn.style.color = "white";
-            delBtn.style.padding = "0.3rem 0.5rem";
-            delBtn.style.position = "absolute";
-            delBtn.style.left = "10%";
-            delBtn.style.top = "-1.5rem";
-            delBtn.innerText = "Delete";
-            delBtn.style.opacity = "0";
-            delBtn.style.pointerEvents = "none";
-        
-            const cpyBtn = document.createElement("div");
-            cpyBtn.className = "cpy-btn shape-btn";
-            cpyBtn.style.borderRadius = "8px";
-            cpyBtn.style.backgroundColor = "blueViolet";
-            cpyBtn.style.color = "white";
-            cpyBtn.style.padding = "0.3rem 0.5rem";
-            cpyBtn.style.position = "absolute";
-            cpyBtn.style.right = "10%";
-            cpyBtn.style.top = "-1.5rem";
-            cpyBtn.innerText = "Copy";
-            cpyBtn.style.opacity = "0";
-            cpyBtn.style.pointerEvents = "none";
-    
-            const circle = document.createElement("div");
-            circle.className = "shape circle";
-            circle.style.border = "2px solid black";
-            circle.style.width = `${Number(wi)}px`;
-            circle.style.height = `${Number(he)}px`;
-            //circle.style.position = "absolute";
-            circle.style.left = `${clientX}px`;
-            circle.style.top = `${clientY}px`;
-            circle.style.borderRadius = "10rem";
-        
-            cont.appendChild(circle);
-            cont.appendChild(wDot);
-            cont.appendChild(hDot);
-            cont.appendChild(delBtn);
-            cont.appendChild(cpyBtn);
-            document.body.appendChild(cont);
-        }
-    }
     else if (
         state == "Comment" &&
         !e.target.matches("#toolbar") &&
@@ -1002,8 +775,19 @@ function CopyShape(shape) {
         const strokeWidth = shape.querySelector('svg[data-type="line"] line').getAttribute("stroke-width");
         const l = Number(shape.style.left.slice(0, shape.style.left.indexOf("p"))) + 25;
         const t = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 25;
-        console.log(l, t);
-        createLine(lineWidth, strokeWidth, `${l}px`, `${t}px`);
+        shape = createLine(lineWidth, strokeWidth, `${l}px`, `${t}px`);
+        const info = shape.getBoundingClientRect();
+        const sh = {
+            type: "line",
+            actualShape: shape,
+            left: info.left,
+            right: info.right,
+            top: info.top,
+            bottom: info.bottom,
+            width: info.width,
+            height: info.height,
+        };
+        createdShapes.push(sh);
     }
 }
 
@@ -1045,7 +829,21 @@ function updateUI(activeBtn) {
 
 toolbar.addEventListener('click', e => {
     if (e.target.closest(".tool") == null) return;
-    else if (e.target.closest(".line-btn")) createLine(200, 3, "50%", "50%");
+    else if (e.target.closest(".line-btn")) {
+        shape = createLine(200, 3, "50%", "50%");
+        const info = shape.getBoundingClientRect();
+        const sh = {
+            type: "line",
+            actualShape: shape,
+            left: info.left,
+            right: info.right,
+            top: info.top,
+            bottom: info.bottom,
+            width: info.width,
+            height: info.height,
+        };
+        createdShapes.push(sh);
+    }
     const tgt = e.target.closest('.tool');
     if (tgt) updateUI(tgt);
 });
@@ -1131,6 +929,8 @@ function createRect(width, height, left, top) {
     cont.appendChild(hDot);
     cont.appendChild(whDot);
     document.body.appendChild(cont);
+
+    return cont;
 }
 
 function createCircle(width, height, left, top) {
@@ -1209,6 +1009,8 @@ function createCircle(width, height, left, top) {
     cont.appendChild(hDot);
     cont.appendChild(whDot);
     document.body.appendChild(cont);
+
+    return cont;
 }
 
 function createText(svgWidth, strokeWidth, viewBox, d, left, top) {
@@ -1221,6 +1023,7 @@ function createText(svgWidth, strokeWidth, viewBox, d, left, top) {
     cont.style.left = `${left}px`;
     cont.style.top = `${top}px`;
     cont.style.zIndex = "0";
+    cont.style.pointerEvents = "none";
     // cont.style.border = "2px dotted black";
     cont.setAttribute("data-is-lock", "false");
 
@@ -1300,6 +1103,8 @@ function createText(svgWidth, strokeWidth, viewBox, d, left, top) {
     cont.appendChild(hDot);
     cont.appendChild(whDot);
     document.body.appendChild(cont);
+
+    return cont;
 }
 
 function createLine(lineWidth, strokeWidth, left, top) {
@@ -1394,6 +1199,8 @@ function createLine(lineWidth, strokeWidth, left, top) {
     wrapper.appendChild(hDot);
     wrapper.appendChild(whDot);
     document.body.appendChild(wrapper);
+
+    return wrapper;
 }
 
 function Lasso(e) {
