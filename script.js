@@ -152,8 +152,17 @@ document.addEventListener("touchstart", (e) => {
         canvas.appendChild(lasso);
     }
 
+    else if (lassoed.length > 0 && state == "Pan") {
+        lassoed.forEach(sh => {
+            shX = sh.style.left.slice(0, sh.style.left.indexOf("p"));
+            shY = sh.style.top.slice(0, sh.style.top.indexOf("p"));
+            sh.setAttribute("data-sh-x", shX);
+            sh.setAttribute("data-sh-y", shY);
+        });
+    }
+
     else if (e.target.matches(".shape") && state == "Pan") {
-        shapebar.style.display = "flex";
+        // shapebar.style.display = "flex";
         const cont = e.target.closest(".cont");
         // const delBtn = cont.querySelector(".del-btn");
         // const cpyBtn = cont.querySelector(".cpy-btn");
@@ -174,21 +183,6 @@ document.addEventListener("touchstart", (e) => {
         const shapeInfo = e.target.closest(".cont").getBoundingClientRect();
         relXPos = e.touches[0].clientX - shapeInfo.left;
         relYPos = e.touches[0].clientY - shapeInfo.top;
-
-        if (lassoed) {
-            lassoed.forEach(sh => {
-                shX = sh.style.left.slice(0, sh.style.left.indexOf("p"));
-                shY = sh.style.top.slice(0, sh.style.top.indexOf("p"));
-                sh.setAttribute("data-sh-x", shX);
-                sh.setAttribute("data-sh-y", shY);
-
-                const shInfo = sh.closest(".cont").getBoundingClientRect();
-                relXPos = e.touches[0].clientX - shInfo.left;
-                relYPos = e.touches[0].clientY - shInfo.top;
-                sh.setAttribute("data-rel-x", relXPos);
-                sh.setAttribute("data-rel-y", relXPos);
-            });
-        }
             
         if (shape && shape !== e.target.closest(".cont")) {
             // shape.classList.remove("selected");
@@ -215,7 +209,7 @@ document.addEventListener("touchstart", (e) => {
         // cont.classList.add("selected");
     }
     else if (e.target.matches(".svg-cont") && state == "Pan") {
-        shapebar.style.display = "flex";
+        // shapebar.style.display = "flex";
         const cont = e.target;
         // const delBtn = cont.querySelector(".del-btn");
         // const cpyBtn = cont.querySelector(".cpy-btn");
@@ -385,28 +379,30 @@ document.addEventListener("touchmove", (e) => {
         line.setAttribute("d", `M ${startX} ${startY} L ${e.touches[0].clientX} ${e.touches[0].clientY}`);
     }
     
+    else if (lassoed.length > 0 && state == "Pan") {
+        lassoed.forEach(sh => {
+            // shX = sh.style.left.slice(0, sh.style.left.indexOf("p"))
+            // shY = sh.style.top.slice(0, sh.style.top.indexOf("p"))
+            const touch = e.touches[0] || e.changedTouches[0];
+            let xPos = touch.clientX - startX + Number(sh.dataset.shX);
+            let yPos = touch.clientY - startY + Number(sh.dataset.shY);
+            // First Mistake.
+            // let xPos = touch.clientX - Number(sh.dataset.shX);
+            // let yPos = touch.clientY - Number(sh.dataset.shY);
+            // Second Mistake.
+            // let xPos = touch.clientX - Number(sh.dataset.relX) -  Number(sh.dataset.shX);
+            // let xPos = touch.clientY - Number(sh.dataset.relY) -  Number(sh.dataset.shY);
+            sh.style.left = `${xPos}px`;
+            sh.style.top = `${yPos}px`;
+        });
+    }
     
     else if (e.target.matches(".shape") && state == "Pan" && shape.dataset.isLock == "false") {
         const touch = e.touches[0] || e.changedTouches[0];
-
-        if (lassoed) {
-            lassoed.forEach(sh => {
-                // shX = sh.style.left.slice(0, sh.style.left.indexOf("p"))
-                // shY = sh.style.top.slice(0, sh.style.top.indexOf("p"))
-                let xPos = touch.clientX - Number(sh.dataset.relX) - Number(sh.dataset.shX);
-                let yPos = touch.clientY - Number(sh.dataset.relY) - Number(sh.dataset.shY);
-                // let xPos = touch.clientX - Number(sh.dataset.shX);
-                // let yPos = touch.clientY - Number(sh.dataset.shY);
-                sh.style.left = `${xPos}px`;
-                sh.style.top = `${yPos}px`;
-            });
-        }
-        // else {
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
         shape.style.left = `${xPos}px`;
         shape.style.top = `${yPos}px`;
-        // } 
     }
     else if (e.target.matches(".svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
         const touch = e.touches[0] || e.changedTouches[0];
@@ -525,18 +521,6 @@ document.addEventListener("touchend", (e) => {
         const tempShapeLeft = outerTempShape.style.left.slice(0, outerTempShape.style.left.indexOf("p"));
         const tempShapeTop = outerTempShape.style.top.slice(0, outerTempShape.style.top.indexOf("p"));
         shape = createRect(width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
-        const info = shape.getBoundingClientRect();
-        const sh = {
-            type: "rect",
-            actualShape: shape.querySelector(".shape"),
-            left: info.left,
-            right: info.right,
-            top: info.top,
-            bottom: info.bottom,
-            width: info.width,
-            height: info.height,
-        };
-        createdShapes.push(sh);
     }
     else if (
         state != "Pan" &&
@@ -548,19 +532,7 @@ document.addEventListener("touchend", (e) => {
         const tempShapeWidth = outerTempShape.style.width.slice(0, outerTempShape.style.width.indexOf("p"));
         const tempShapeHeight = outerTempShape.style.height.slice(0, outerTempShape.style.height.indexOf("p"));
         shape = createCircle(width=Number(tempShapeWidth), height=Number(tempShapeHeight), left=Number(startX), top=Number(startY));
-        const info = shape.getBoundingClientRect();
-        const sh = {
-            type: "circle",
-            actualShape: shape.querySelector(".shape"),
-            left: info.left,
-            right: info.right,
-            top: info.top,
-            bottom: info.bottom,
-            width: info.width,
-            height: info.height,
-        };
-        createdShapes.push(sh);
-        console.log(createdShapes);}
+    }
     else if (
         state == "Text" &&
         !e.target.matches("#toolbar") &&
@@ -576,18 +548,6 @@ document.addEventListener("touchend", (e) => {
         const tempShapeLeft = outerTempShape.style.left.slice(0, outerTempShape.style.left.indexOf("p"));
         const tempShapeTop = outerTempShape.style.top.slice(0, outerTempShape.style.top.indexOf("p"));
         shape = createText(svgWidth=svg.getAttribute("width"), strokeWidth="3", d=viewBoxAttr, viewBox=dAttr, left=tempShapeLeft, top=tempShapeTop);
-        const info = shape.getBoundingClientRect();
-        const sh = {
-            type: "text",
-            actualShape: shape.querySelector(".svg-cont"),
-            left: info.left,
-            right: info.right,
-            top: info.top,
-            bottom: info.bottom,
-            width: info.width,
-            height: info.height,
-        };
-        createdShapes.push(sh);
     }
     else if (
         state == "Lasso" &&
@@ -596,8 +556,6 @@ document.addEventListener("touchend", (e) => {
         !e.target.matches(".shape-btn svg")
     ) {
         const lassoInfo = lasso.querySelector("svg polyline").getBoundingClientRect();
-        const test = document.querySelector(".test");
-        const testInfo = document.querySelector(".test").getBoundingClientRect();
 
         document.body.querySelectorAll(".cont, .svg-cont").forEach(sh => {
             let r = sh.getBoundingClientRect();
@@ -606,36 +564,17 @@ document.addEventListener("touchend", (e) => {
                 lassoInfo.left < (r.left + (r.width / 2)) &&
                 lassoInfo.right > (r.right - (r.width / 2)) &&
                 lassoInfo.top < (r.top + (r.height / 2)) &&
-                lassoInfo.bottom > (r.bottom - (r.height / 2))
+                lassoInfo.bottom > (r.bottom - (r.height / 2)) &&
+                sh.dataset.isLock == "false"
             ) {
-                // sh.actualShape.style.border = "2px dotted red";
-                // selectedShapes.push(sh.actualShape);
-                // sh.style.border = sh.classList.contains("cont") ? sh.querySelector(".shape").style.border = "2px dashed red" : sh.style.border = "2px dashed blue";
-                // shapebar.style.display = "flex";
-                // shape = test;
                 lassoed.push(sh);
             }
             lassoed.forEach(sh => {
                 if ( sh.classList.contains("cont") ) sh.querySelector(".shape").style.border = "2px dashed red";
                 else if ( sh.classList.contains("svg-cont") ) sh.style.border = "2px dashed red";
             });
-            // selectedShapes.forEach(sel => {
-            //     sel.style.border = "3px dotted red";
-            // });
-            // console.log(selectedShapes)
-            lasso.remove();
-        });
-
-        if (
-            lassoInfo.left < testInfo.left &&
-            lassoInfo.right > testInfo.right &&
-            lassoInfo.top < testInfo.top &&
-            lassoInfo.bottom > testInfo.bottom
-        ) {
-            test.style.border = "2px dotted red";
             shapebar.style.display = "flex";
-            shape = test;
-        }
+        });
         lasso.remove();
     }
     if (outerTempShape) {
@@ -705,7 +644,6 @@ document.addEventListener("click", (e) => {
      }
     else if (e.target.matches(".svg-cont")) {
         shape = e.target;
-        shape.classList.add("selected");
         // const delBtn = shape.querySelector(".del-btn");
         // const cpyBtn = shape.querySelector(".cpy-btn");
         const wDot = shape.querySelector(".w-dot");
@@ -725,7 +663,7 @@ document.addEventListener("click", (e) => {
         state != "Comment" &&
         !e.target.matches(".svg-cont") &&
         !e.target.matches(".shape") &&
-        !e.target.matches(".shape-btn") &&
+        !e.target.closest(".shape-btn") &&
         !e.target.matches(".tool") &&
         !e.target.closest(".comment-cont") &&
         !e.target.matches(".tool svg")
@@ -740,6 +678,11 @@ document.addEventListener("click", (e) => {
         hDot.style.pointerEvents = "none";
         whDot.style.opacity = "0";
         whDot.style.pointerEvents = "none";
+        lassoed.forEach(sh => {
+            if (sh.classList.contains("cont")) sh.querySelector(".shape").style.border = "2px solid black";
+            else if (sh.classList.contains("svg-cont")) sh.style.border = "";
+        });
+        lassoed = [];
     }
 
     else if (
@@ -756,78 +699,66 @@ function LockShape(target) {
     if (!target) return;
 
     target.dataset.isLock = "true";
-    const shapeIcon = shape.querySelector(".shape-lock-icon");
+    const shapeIcon = target.querySelector(".shape-lock-icon");
     shapeIcon.style.display = "flex";
     shapeIcon.style.pointerEvents = "auto";
 }
 
-function DeleteShape(shape) {
-    if (!shape) return;
+function DeleteShape(target) {
+    if (!target) return;
 
-    shape.remove();
-    shape = null;
+    target.remove();
+    target = null;
 }
 
-function BringToFront(shape) {
-    if (!shape) return;
+function BringToFront(target) {
+    if (!target) return;
 
-    let shapeZIndex = Number(shape.style.zIndex);
+    let shapeZIndex = Number(target.style.zIndex);
     shapeZIndex++;
-    shape.style.zIndex = shapeZIndex;
+    target.style.zIndex = shapeZIndex;
 }
 
-function SendToBack(shape) {
-    if (!shape) return;
+function SendToBack(target) {
+    if (!target) return;
 
-    let shapeZIndex = Number(shape.style.zIndex);
+    let shapeZIndex = Number(target.style.zIndex);
     shapeZIndex--;
-    shape.style.zIndex = shapeZIndex;
+    target.style.zIndex = shapeZIndex;
 }
 
-function CopyShape(shape) {
-    if (!shape) return;
+function CopyShape(target) {
+    if (!target) return;
 
-    if (shape.classList.contains("rect")) {
-        const w = shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p"));
-        const h = shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p"));
-        const l = Number(shape.style.left.slice(0, shape.style.left.indexOf("p"))) + 25;
-        const t = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 25;
+    if (target.classList.contains("rect")) {
+        const w = target.querySelector(".shape").style.width.slice(0, target.querySelector(".shape").style.width.indexOf("p"));
+        const h = target.querySelector(".shape").style.height.slice(0, target.querySelector(".shape").style.height.indexOf("p"));
+        const l = Number(target.style.left.slice(0, target.style.left.indexOf("p"))) + 25;
+        const t = Number(target.style.top.slice(0, target.style.top.indexOf("p"))) + 25;
         createRect(w, h, l, t);
     }
-    else if (shape.classList.contains("circle")) {
-        const w = shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p"));
-        const h = shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p"));
-        const l = Number(shape.style.left.slice(0, shape.style.left.indexOf("p"))) + 25;
-        const t = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 25;
+    else if (target.classList.contains("circle")) {
+        const w = target.querySelector(".shape").style.width.slice(0, target.querySelector(".shape").style.width.indexOf("p"));
+        const h = target.querySelector(".shape").style.height.slice(0, target.querySelector(".shape").style.height.indexOf("p"));
+        const l = Number(target.style.left.slice(0, target.style.left.indexOf("p"))) + 25;
+        const t = Number(target.style.top.slice(0, target.style.top.indexOf("p"))) + 25;
         createCircle(w, h, l, t);
     }
-    else if (shape.classList.contains("text")) {
-        const svgWidth = shape.querySelector('svg[data-type="text"]').getAttribute("width");
-        const viewBox = shape.querySelector('svg[data-type="text"]').getAttribute("viewBox");
-        const strokeWidth = shape.querySelector('svg[data-type="text"] path').getAttribute("stroke-width");
-        const d = shape.querySelector('svg[data-type="text"] path').getAttribute("d");
-        const l = Number(shape.style.left.slice(0, shape.style.left.indexOf("p"))) + 25;
-        const t = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 25;
+    else if (target.classList.contains("text")) {
+        const svgWidth = target.querySelector('svg[data-type="text"]').getAttribute("width");
+        const viewBox = target.querySelector('svg[data-type="text"]').getAttribute("viewBox");
+        const strokeWidth = target.querySelector('svg[data-type="text"] path').getAttribute("stroke-width");
+        const d = target.querySelector('svg[data-type="text"] path').getAttribute("d");
+        const l = Number(target.style.left.slice(0, target.style.left.indexOf("p"))) + 25;
+        const t = Number(target.style.top.slice(0, target.style.top.indexOf("p"))) + 25;
         createText(svgWidth, strokeWidth, viewBox, d, l, t);
     }
-    else if (shape.classList.contains("line")) {
-        const lineWidth = shape.querySelector('svg[data-type="line"] line').getAttribute("x2");
-        const strokeWidth = shape.querySelector('svg[data-type="line"] line').getAttribute("stroke-width");
-        const l = Number(shape.style.left.slice(0, shape.style.left.indexOf("p"))) + 25;
-        const t = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 25;
-        shape = createLine(lineWidth, strokeWidth, `${l}px`, `${t}px`);
-        const info = shape.getBoundingClientRect();
-        const sh = {
-            type: "line",
-            actualShape: shape,
-            left: info.left,
-            right: info.right,
-            top: info.top,
-            bottom: info.bottom,
-            width: info.width,
-            height: info.height,
-        };
-        createdShapes.push(sh);
+    else if (target.classList.contains("line")) {
+        const lineWidth = target.querySelector('svg[data-type="line"] line').getAttribute("x2");
+        const strokeWidth = target.querySelector('svg[data-type="line"] line').getAttribute("stroke-width");
+        const l = Number(target.style.left.slice(0, target.style.left.indexOf("p"))) + 25;
+        const t = Number(target.style.top.slice(0, target.style.top.indexOf("p"))) + 25;
+        target = createLine(lineWidth, strokeWidth, `${l}px`, `${t}px`);
     }
 }
 
@@ -835,11 +766,26 @@ shapebar.addEventListener("click", (e) => {
     if (e.target.closest(".sh-tool") == null) return;
 
     shapeBtn = e.target.closest(".sh-tool");
-    if (shapeBtn.classList.contains("lock-btn")) LockShape(shape);
-    else if (shapeBtn.classList.contains("delete-btn")) DeleteShape(shape);
-    else if (shapeBtn.classList.contains("b-t-f-btn")) BringToFront(shape);
-    else if (shapeBtn.classList.contains("s-t-b-btn")) SendToBack(shape);
-    else if (shapeBtn.classList.contains("copy-btn")) CopyShape(shape);
+    if (shapeBtn.classList.contains("lock-btn")) {
+        if (lassoed.length > 0) lassoed.forEach(sh => LockShape(sh));
+        else LockShape(shape);
+    }
+    else if (shapeBtn.classList.contains("delete-btn")) {
+        if (lassoed.length > 0) lassoed.forEach(sh => DeleteShape(sh));
+        else DeleteShape(shape);
+    }
+    else if (shapeBtn.classList.contains("b-t-f-btn")) {
+        if (lassoed.length > 0) lassoed.forEach(sh => BringToFront(sh));
+        else BringToFront(sh);
+    }
+    else if (shapeBtn.classList.contains("s-t-b-btn")) {
+        if (lassoed.length > 0) lassoed.forEach(sh => SendToBack(sh));
+        else SendToBack(shape);
+    }
+    else if (shapeBtn.classList.contains("copy-btn")) {
+        if (lassoed.length > 0) lassoed.forEach(sh => CopyShape(sh));
+        else CopyShape(shape);
+    }
 });
 
 
