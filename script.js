@@ -380,21 +380,35 @@ document.addEventListener("touchmove", (e) => {
     }
     
     else if (lassoed.length > 0 && state == "Pan") {
-        lassoed.forEach(sh => {
-            // shX = sh.style.left.slice(0, sh.style.left.indexOf("p"))
-            // shY = sh.style.top.slice(0, sh.style.top.indexOf("p"))
+        // lassoed.forEach(sh => {
+        //     const touch = e.touches[0] || e.changedTouches[0];
+        //     let xPos = touch.clientX - startX + Number(sh.dataset.shX);
+        //     let yPos = touch.clientY - startY + Number(sh.dataset.shY);
+        //     // First Mistake.
+        //     // let xPos = touch.clientX - Number(sh.dataset.shX);
+        //     // let yPos = touch.clientY - Number(sh.dataset.shY);
+        //     // Second Mistake.
+        //     // let xPos = touch.clientX - Number(sh.dataset.relX) -  Number(sh.dataset.shX);
+        //     // let xPos = touch.clientY - Number(sh.dataset.relY) -  Number(sh.dataset.shY);
+        //     sh.style.left = `${xPos}px`;
+        //     sh.style.top = `${yPos}px`;
+        // });
+
+        //! The Enhanced Version of Lasso Logic
+        for (let i = 0; i < lassoed.length; i++) {
+            if (lassoed[i].dataset.isLock == "true") continue;
             const touch = e.touches[0] || e.changedTouches[0];
-            let xPos = touch.clientX - startX + Number(sh.dataset.shX);
-            let yPos = touch.clientY - startY + Number(sh.dataset.shY);
+            let xPos = touch.clientX - startX + Number(lassoed[i].dataset.shX);
+            let yPos = touch.clientY - startY + Number(lassoed[i].dataset.shY);
             // First Mistake.
             // let xPos = touch.clientX - Number(sh.dataset.shX);
             // let yPos = touch.clientY - Number(sh.dataset.shY);
             // Second Mistake.
             // let xPos = touch.clientX - Number(sh.dataset.relX) -  Number(sh.dataset.shX);
             // let xPos = touch.clientY - Number(sh.dataset.relY) -  Number(sh.dataset.shY);
-            sh.style.left = `${xPos}px`;
-            sh.style.top = `${yPos}px`;
-        });
+            lassoed[i].style.left = `${xPos}px`;
+            lassoed[i].style.top = `${yPos}px`;
+        }
     }
     
     else if (e.target.matches(".shape") && state == "Pan" && shape.dataset.isLock == "false") {
