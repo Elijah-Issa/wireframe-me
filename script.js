@@ -42,6 +42,10 @@ document.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
 
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+
     if (
         state == "Rectangle" ||
         state == "Circle" &&
@@ -49,27 +53,28 @@ document.addEventListener("touchstart", (e) => {
         !e.target.matches(".shape-btn") &&
         !e.target.matches(".shape-btn svg")
     ) {
-        const touch = e.touches[0];
-        startX = touch.clientX;
-        startY = touch.clientY;
+        InitRect(startX, startY);
+        // const touch = e.touches[0];
+        // startX = touch.clientX;
+        // startY = touch.clientY;
 
-        let borderRad = 0;
-        if (state == "Circle") borderRad = "10rem";
-        else if (state == "Rectangle") borderRad = "8px";
+        // let borderRad = 0;
+        // if (state == "Circle") borderRad = "10rem";
+        // else if (state == "Rectangle") borderRad = "8px";
         
-        outerTempShape = document.createElement('div');
-        outerTempShape.className = 'cont';
-        Object.assign(outerTempShape.style, {
-            position: 'absolute',
-            left: `${startX}px`,
-            top: `${startY}px`,
-            border: '2px dotted black',
-            borderRadius: borderRad,
-            width: '0px',
-            height: '0px',
-            zIndex: "999",
-        });
-        document.body.appendChild(outerTempShape);
+        // outerTempShape = document.createElement('div');
+        // outerTempShape.className = 'cont';
+        // Object.assign(outerTempShape.style, {
+        //     position: 'absolute',
+        //     left: `${startX}px`,
+        //     top: `${startY}px`,
+        //     border: '2px dotted black',
+        //     borderRadius: borderRad,
+        //     width: '0px',
+        //     height: '0px',
+        //     zIndex: "999",
+        // });
+        // document.body.appendChild(outerTempShape);
     }
     else if (
         state == "Text" &&
@@ -1311,4 +1316,24 @@ function createComment(e) {
     document.body.appendChild(overallWrapper);
 
     shape = wrapper;
+}
+
+function InitRect(x, y) {
+    let borderRad = 0;
+    if (state == "Circle") borderRad = "10rem";
+    else if (state == "Rectangle") borderRad = "8px";
+    
+    outerTempShape = document.createElement('div');
+    outerTempShape.className = 'cont';
+    Object.assign(outerTempShape.style, {
+        position: 'absolute',
+        left: `${x}px`,
+        top: `${y}px`,
+        border: '2px dotted black',
+        borderRadius: borderRad,
+        width: '0px',
+        height: '0px',
+        zIndex: "999",
+    });
+    document.body.appendChild(outerTempShape);
 }
