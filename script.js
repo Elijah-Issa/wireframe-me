@@ -1,5 +1,5 @@
 let createdShapes = [];
-let selectedShapes = [];
+let lassoed = [];
 
 document.addEventListener("keydown", e => {
     if (e.key == "q") console.log(createdShapes);
@@ -35,6 +35,7 @@ let state;
 let startX, startY; // where the touch started
 let outerTempShape = null;
 let lassoCont, lasso, polyline, d, line;
+let shX, shY;
 // let lassoLine, lPath, ld;
 
 document.addEventListener("touchstart", (e) => {
@@ -173,6 +174,21 @@ document.addEventListener("touchstart", (e) => {
         const shapeInfo = e.target.closest(".cont").getBoundingClientRect();
         relXPos = e.touches[0].clientX - shapeInfo.left;
         relYPos = e.touches[0].clientY - shapeInfo.top;
+
+        if (lassoed) {
+            lassoed.forEach(sh => {
+                shX = sh.style.left.slice(0, sh.style.left.indexOf("p"));
+                shY = sh.style.top.slice(0, sh.style.top.indexOf("p"));
+                sh.setAttribute("data-sh-x", shX);
+                sh.setAttribute("data-sh-y", shY);
+
+                const shInfo = sh.closest(".cont").getBoundingClientRect();
+                relXPos = e.touches[0].clientX - shInfo.left;
+                relYPos = e.touches[0].clientY - shInfo.top;
+                sh.setAttribute("data-rel-x", relXPos);
+                sh.setAttribute("data-rel-y", relXPos);
+            });
+        }
             
         if (shape && shape !== e.target.closest(".cont")) {
             // shape.classList.remove("selected");
@@ -372,10 +388,25 @@ document.addEventListener("touchmove", (e) => {
     
     else if (e.target.matches(".shape") && state == "Pan" && shape.dataset.isLock == "false") {
         const touch = e.touches[0] || e.changedTouches[0];
+
+        if (lassoed) {
+            lassoed.forEach(sh => {
+                // shX = sh.style.left.slice(0, sh.style.left.indexOf("p"))
+                // shY = sh.style.top.slice(0, sh.style.top.indexOf("p"))
+                let xPos = touch.clientX - Number(sh.dataset.relX) - Number(sh.dataset.shX);
+                let yPos = touch.clientY - Number(sh.dataset.relY) - Number(sh.dataset.shY);
+                // let xPos = touch.clientX - Number(sh.dataset.shX);
+                // let yPos = touch.clientY - Number(sh.dataset.shY);
+                sh.style.left = `${xPos}px`;
+                sh.style.top = `${yPos}px`;
+            });
+        }
+        // else {
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
         shape.style.left = `${xPos}px`;
         shape.style.top = `${yPos}px`;
+        // } 
     }
     else if (e.target.matches(".svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
         const touch = e.touches[0] || e.changedTouches[0];
@@ -557,7 +588,6 @@ document.addEventListener("touchend", (e) => {
             height: info.height,
         };
         createdShapes.push(sh);
-        console.log(createdShapes);
     }
     else if (
         state == "Lasso" &&
@@ -569,21 +599,29 @@ document.addEventListener("touchend", (e) => {
         const test = document.querySelector(".test");
         const testInfo = document.querySelector(".test").getBoundingClientRect();
 
-        createdShapes.forEach(sh => {
+        document.body.querySelectorAll(".cont, .svg-cont").forEach(sh => {
+            let r = sh.getBoundingClientRect();
+            
             if (
-                lassoInfo.left < sh.left &&
-                lassoInfo.right > sh.right &&
-                lassoInfo.top < sh.top &&
-                lassoInfo.bottom > sh.bottom
+                lassoInfo.left < (r.left + (r.width / 2)) &&
+                lassoInfo.right > (r.right - (r.width / 2)) &&
+                lassoInfo.top < (r.top + (r.height / 2)) &&
+                lassoInfo.bottom > (r.bottom - (r.height / 2))
             ) {
                 // sh.actualShape.style.border = "2px dotted red";
-                selectedShapes.push(sh.actualShape);
-                shapebar.style.display = "flex";
+                // selectedShapes.push(sh.actualShape);
+                // sh.style.border = sh.classList.contains("cont") ? sh.querySelector(".shape").style.border = "2px dashed red" : sh.style.border = "2px dashed blue";
+                // shapebar.style.display = "flex";
                 // shape = test;
+                lassoed.push(sh);
             }
-            selectedShapes.forEach(sel => {
-                sel.style.border = "3px dotted red";
+            lassoed.forEach(sh => {
+                if ( sh.classList.contains("cont") ) sh.querySelector(".shape").style.border = "2px dashed red";
+                else if ( sh.classList.contains("svg-cont") ) sh.style.border = "2px dashed red";
             });
+            // selectedShapes.forEach(sel => {
+            //     sel.style.border = "3px dotted red";
+            // });
             // console.log(selectedShapes)
             lasso.remove();
         });
@@ -605,6 +643,8 @@ document.addEventListener("touchend", (e) => {
         outerTempShape = null;
     }
     initTouch = e.touches[0];
+    // lassoed.length = 0;
+    // lassoed = [];
 });
 
 
@@ -1023,8 +1063,6 @@ function createText(svgWidth, strokeWidth, viewBox, d, left, top) {
     cont.style.left = `${left}px`;
     cont.style.top = `${top}px`;
     cont.style.zIndex = "0";
-    cont.style.pointerEvents = "none";
-    // cont.style.border = "2px dotted black";
     cont.setAttribute("data-is-lock", "false");
 
     cont.innerHTML += `
