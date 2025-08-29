@@ -165,14 +165,31 @@ body {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    bottom: 1%
+    bottom: 0;
 }
 .comment-bar button {
     border-color: transparent;
-    padding: 0.5rem 1rem;
+    padding: 1rem 1.5rem;
     background-color: blueviolet;
     font-weight: bold;
     font-size: 1.2rem;
     border-radius: 8px;
     color: white;
+}
+
+.test {
+    width: 6rem;
+    height: 3rem;
+    background-color: blueviolet;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    color: white;
+    padding: 1rem 2.3rem;
+    z-index: -1;
 }
