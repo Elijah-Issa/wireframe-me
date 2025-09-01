@@ -1,3 +1,4 @@
+// * I will code snap to shape logic again
 // let createdShapes = [];
 let lassoed = [];
 
