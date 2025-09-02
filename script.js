@@ -38,16 +38,8 @@ let outerTempShape = null;
 let lassoCont, lasso, polyline, d, line;
 let shX, shY;
 let shapesInDocument = [];
-
-let snapShape;
-snapShape = document.createElement("div");
-snapShape.className = "snap-shape";
-Object.assign(snapShape.style, {
-    position: "absolute",
-    border: "2px dashed red",
-    borderRadius: "8px",
-});
-document.body.appendChild(snapShape);
+let tempRemovingSnapLine;
+let tempRemovingStartY;
 
 document.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
@@ -178,6 +170,9 @@ document.addEventListener("touchstart", (e) => {
     else if (e.target.matches(".shape") && state == "Pan") {
         // shapebar.style.display = "flex";
         const cont = e.target.closest(".cont");
+        tempRemovingSnapLine = cont.querySelector(".temp-top-line-for-snap");
+        tempRemovingStartY = parseFloat(tempRemovingSnapLine.style.top);
+        console.log(tempRemovingStartY)
         // const delBtn = cont.querySelector(".del-btn");
         // const cpyBtn = cont.querySelector(".cpy-btn");
         const wDot = cont.querySelector(".w-dot");
@@ -330,11 +325,6 @@ document.addEventListener("touchstart", (e) => {
         const h = Number(shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p")));
         const x = Number(shape.style.left.slice(0, shape.style.left.indexOf("p")));
         const y = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 10;
-    
-        snapShape.style.width = `${w}px`;
-        snapShape.style.height = `${h}px`;
-        snapShape.style.left = `calc(${x}px + 1rem)`;
-        snapShape.style.top = `calc(${y}px + 0.5rem)`;
     }
 });
 
@@ -427,13 +417,31 @@ document.addEventListener("touchmove", (e) => {
         const touch = e.touches[0] || e.changedTouches[0];
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
-
+        
+        
         if (SnapToShape(e, shape)) {
             yPos = null;
+            
+            const shapeInfo = shape.getBoundingClientRect();
+            let xLine = e.touches[0].clientX - shapeInfo.left;
+            let yLine = e.touches[0].clientY - shapeInfo.top;
+
             RemoveSnappedShape(e, shape);
-            console.log("shapes are snapping");
+
+            const deltaY = (e.touches[0].clientY - tempRemovingStartY) - shapeInfo.top;
+            const newTop = tempRemovingStartY + deltaY; 
+            tempRemovingSnapLine.style.top = `${newTop}px`;
+            
+            // shape.querySelector(".top-line-for-snap").style.left = `${xLine}px`;
+            // shape.querySelector(".top-line-for-snap").style.top = `${yLine}px`;
+            
+            // setTimeout(() => {
+            //     shape.style.left = `${xPos}px`;
+            //     shape.style.top = `${yPos}px`;
+            // }, 2000);
         }
 
+        
         shape.style.left = `${xPos}px`;
         shape.style.top = `${yPos}px`;
     }
@@ -956,11 +964,26 @@ function CreateRect(width, height, left, top) {
         border: "2px dashed red",
     });
     
+    const tempRectPos = rect.getBoundingClientRect();
+    const tempLineForSnap = document.createElement("div");
+    tempLineForSnap.className = "temp-top-line-for-snap";
+    Object.assign(tempLineForSnap.style, {
+        // visibility: "hidden",
+        pointerEvents: "none",
+        position: "absolute",
+        left: `0`,
+        top: `${tempRectPos.top + 10}px`,
+        width: `100%`,
+        border: "4px dashed blueViolet",
+    });
+
+    
     cont.appendChild(rect);
     cont.appendChild(wDot);
     cont.appendChild(hDot);
     cont.appendChild(whDot);
     cont.appendChild(lineForSnap);
+    cont.appendChild(tempLineForSnap);
     document.body.appendChild(cont);
 
     return cont;
@@ -1396,10 +1419,10 @@ function SnapToShape(e, shapeToSnap) {
 
 function RemoveSnappedShape(e, snappedShape) {
     const actLine = snappedShape.querySelector(".top-line-for-snap");
+}
 
-    actLine.style.borderColor = "black";
-    let x = e.touches[0].clientX;
-    let y = e.touches[0].clientY;
-    snapShape.style.left = `${x}px`;
-    snapShape.style.top = `${y}px`;
+function CallTimeout() {
+    setTimeout(() => {
+        
+    }, 2000);
 }
