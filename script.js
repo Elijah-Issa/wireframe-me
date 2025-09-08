@@ -27,7 +27,7 @@ const lock = document.querySelector(".lock-btn");
 //     y: bbb.top,
 // };
 
-let shape;
+let shape, shapeBounds;
 let clientX, clientY;
 let relXPos, relYPos;
 let initTouch;
@@ -37,16 +37,12 @@ let startX, startY; // where the touch started
 let outerTempShape = null;
 let lassoCont, lasso, polyline, d, line;
 let shX, shY;
-let shapesInDocument = [];
-let tempRemovingSnapLine;
-let tempRemovingStartY;
+let isSnapped = false;
+// let shapesInDocument = [];
 
 document.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-
-    shapesInDocument = document.body.querySelector(".cont");
-    // console.log(`Number of shapes in documents: ${shapesInDocument.length}`)
 
     if (
         state == "Rectangle" ||
@@ -170,9 +166,6 @@ document.addEventListener("touchstart", (e) => {
     else if (e.target.matches(".shape") && state == "Pan") {
         // shapebar.style.display = "flex";
         const cont = e.target.closest(".cont");
-        tempRemovingSnapLine = cont.querySelector(".temp-top-line-for-snap");
-        tempRemovingStartY = parseFloat(tempRemovingSnapLine.style.top);
-        console.log(tempRemovingStartY)
         // const delBtn = cont.querySelector(".del-btn");
         // const cpyBtn = cont.querySelector(".cpy-btn");
         const wDot = cont.querySelector(".w-dot");
@@ -214,6 +207,7 @@ document.addEventListener("touchstart", (e) => {
         }
         
         shape = e.target.closest(".cont");
+        shapeBounds = shape.getBoundingClientRect();
         // shape = e.target;
         // cont.classList.add("selected");
     }
@@ -417,33 +411,16 @@ document.addEventListener("touchmove", (e) => {
         const touch = e.touches[0] || e.changedTouches[0];
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
-        
-        
-        if (SnapToShape(e, shape)) {
-            yPos = null;
-            
-            const shapeInfo = shape.getBoundingClientRect();
-            let xLine = e.touches[0].clientX - shapeInfo.left;
-            let yLine = e.touches[0].clientY - shapeInfo.top;
+        const width = Number(shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p")));
+        const height = Number(shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p")));
 
-            RemoveSnappedShape(e, shape);
+        // const rect = shape.getBoundingClientRect();
+        // const snapped = SnapToShape(touch.clientX, touch.clientY, rect.width, rect.height, shape);
 
-            const deltaY = (e.touches[0].clientY - tempRemovingStartY) - shapeInfo.top;
-            const newTop = tempRemovingStartY + deltaY; 
-            tempRemovingSnapLine.style.top = `${newTop}px`;
-            
-            // shape.querySelector(".top-line-for-snap").style.left = `${xLine}px`;
-            // shape.querySelector(".top-line-for-snap").style.top = `${yLine}px`;
-            
-            // setTimeout(() => {
-            //     shape.style.left = `${xPos}px`;
-            //     shape.style.top = `${yPos}px`;
-            // }, 2000);
-        }
+        const snapped = SnapToShape(xPos, yPos, width, height, shape);
 
-        
-        shape.style.left = `${xPos}px`;
-        shape.style.top = `${yPos}px`;
+        shape.style.left = `${snapped.x}px`;
+        shape.style.top = `${snapped.y}px`;
     }
     else if (e.target.matches(".svg-cont") && state == "Pan" && shape.dataset.isLock == "false") {
         const touch = e.touches[0] || e.changedTouches[0];
@@ -951,39 +928,10 @@ function CreateRect(width, height, left, top) {
     rect.style.top = `${clientY}px`;
     rect.style.borderRadius = "8px";
 
-    const rectPos = rect.getBoundingClientRect();
-    const lineForSnap = document.createElement("div");
-    lineForSnap.className = "top-line-for-snap";
-    Object.assign(lineForSnap.style, {
-        // visibility: "hidden",
-        pointerEvents: "none",
-        position: "absolute",
-        left: `0`,
-        top: `${rectPos.top + 10}px`,
-        width: `100%`,
-        border: "2px dashed red",
-    });
-    
-    const tempRectPos = rect.getBoundingClientRect();
-    const tempLineForSnap = document.createElement("div");
-    tempLineForSnap.className = "temp-top-line-for-snap";
-    Object.assign(tempLineForSnap.style, {
-        // visibility: "hidden",
-        pointerEvents: "none",
-        position: "absolute",
-        left: `0`,
-        top: `${tempRectPos.top + 10}px`,
-        width: `100%`,
-        border: "4px dashed blueViolet",
-    });
-
-    
     cont.appendChild(rect);
     cont.appendChild(wDot);
     cont.appendChild(hDot);
     cont.appendChild(whDot);
-    cont.appendChild(lineForSnap);
-    cont.appendChild(tempLineForSnap);
     document.body.appendChild(cont);
 
     return cont;
@@ -1383,46 +1331,48 @@ function createComment(e) {
     shape = wrapper;
 }
 
-function SnapToShape(e, shapeToSnap) {
-    // const line = shapeToSpan.querySelector(".top-line-for-span");
-    // const lines = document.body.querySelectorAll(".top-line-for-span");
+function GetAllShapeBounds(excludeShape) {
+    const shapes = [
+        ...document.querySelectorAll('.cont, .svg-cont')
+    ].filter(el => el !== excludeShape && el.dataset.isLock !== "true");
 
-    // const lineInfo = shapeToSnap.getBoundingClientRect();
-    let isSnap = false;
-    const actLine = shapeToSnap.querySelector(".top-line-for-snap");
-    const lineShapeInfo = shapeToSnap.querySelector(".top-line-for-snap").getBoundingClientRect();
-    const innerShape = shapeToSnap;
+    return shapes.map(el => {
+        const r = el.getBoundingClientRect();
+        return {
+            el,
+            left: r.left,
+            right: r.right,
+            top: r.top,
+            bottom: r.bottom,
+            centerX: r.left + r.width / 2,
+            centerY: r.top + r.height / 2,
+            width: r.width,
+            height: r.height,
+        };
+    });
+}
 
-    
+function SnapToShape(x, y, width, height, excludeShape, threshold = 10) {
+    const bounds = GetAllShapeBounds(excludeShape);
+    const shapeCenterX = x + width / 2;
+    const shapeCenterY = y + height / 2;
 
-    for (n of shapesInDocument.querySelectorAll(".top-line-for-snap")) {
-        const lineInfo = n.getBoundingClientRect();
-        // console.log(lineInfo.left);
-        if (lineShapeInfo.top == lineInfo.top && n.closest(".cont") !== shapeToSnap) {
-            isSnap = true;
+    let snappedX = x;
+    let snappedY = y;
 
-            snapShape = document.createElement("div");
-            snapShape.className = "snap-shape";
-            Object.assign(snapShape.style, {
-                left: `${innerShape.style.left.slice(0, innerShape.style.left.indexOf("p"))}px`,
-                top: `${innerShape.style.top.slice(0, innerShape.style.top.indexOf("p"))}px`,
-            });
+    for (const b of bounds) {
+        // Horizontal snapping
+        if (Math.abs(x - b.left) < threshold) snappedX = b.left;
+        else if (Math.abs(x + width - b.left) < threshold) snappedX = b.left - width - 2;
 
-            document.body.appendChild(snapShape);
+        // else if (Math.abs(x + width - b.left) < threshold) snappedX = b.left - width;
+        // else if (Math.abs(shapeCenterX - b.centerX) < threshold) snappedX = b.centerX - width / 2;
 
-            return isSnap;
-        }
+        // // Vertical snapping
+        // if (Math.abs(y - b.bottom) < threshold) snappedY = b.bottom;
+        // else if (Math.abs(y + height - b.top) < threshold) snappedY = b.top - height;
+        // else if (Math.abs(shapeCenterY - b.centerY) < threshold) snappedY = b.centerY - height / 2;
     }
 
-    return isSnap;
-}
-
-function RemoveSnappedShape(e, snappedShape) {
-    const actLine = snappedShape.querySelector(".top-line-for-snap");
-}
-
-function CallTimeout() {
-    setTimeout(() => {
-        
-    }, 2000);
+    return { x: snappedX, y: snappedY };
 }
