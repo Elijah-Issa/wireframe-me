@@ -411,13 +411,17 @@ document.addEventListener("touchmove", (e) => {
         const touch = e.touches[0] || e.changedTouches[0];
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
-        const width = Number(shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p")));
-        const height = Number(shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p")));
+        
+        const rect = shape.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        // const width = Number(shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p")));
+        // const height = Number(shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p")));
 
         // const rect = shape.getBoundingClientRect();
         // const snapped = SnapToShape(touch.clientX, touch.clientY, rect.width, rect.height, shape);
 
-        const snapped = SnapToShape(xPos, yPos, width, height, shape);
+        const snapped = SnapToShape(xPos, yPos, width, height, shape, 20);
 
         shape.style.left = `${snapped.x}px`;
         shape.style.top = `${snapped.y}px`;
@@ -1363,9 +1367,10 @@ function SnapToShape(x, y, width, height, excludeShape, threshold = 10) {
     for (const b of bounds) {
         // Horizontal snapping
         if (Math.abs(x - b.left) < threshold) snappedX = b.left;
-        else if (Math.abs(x + width - b.left) < threshold) snappedX = b.left - width - 2;
-
-        // else if (Math.abs(x + width - b.left) < threshold) snappedX = b.left - width;
+        // else if (Math.abs(x + width - b.left) < threshold) snappedX = b.left - width - 2;
+        else if (Math.abs(x + width - b.right) < threshold) snappedX = b.right - width;
+        else if (Math.abs(y - b.top) < threshold) snappedY = b.top;
+        else if (Math.abs(y + height - b.bottom) < threshold) snappedY = b.bottom - height;
         // else if (Math.abs(shapeCenterX - b.centerX) < threshold) snappedX = b.centerX - width / 2;
 
         // // Vertical snapping
