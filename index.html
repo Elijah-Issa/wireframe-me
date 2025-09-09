@@ -100,6 +100,22 @@
 
         <div class="test" style="display: none;">For Test</div>
 
+        <!--  Mobile-only hint  -->
+        <div id="desktop-hint">
+            <div class="card">
+            <h2>👋 Heads-up – this demo is built for mobile</h2>
+            <p>Switch to a mobile viewport in <strong>three clicks</strong>:</p>
+            <ol>
+                <li>Press <kbd>F12</kbd> (or right-click → Inspect).</li>
+                <li>Click the “Device Toggle Toolbar” icon
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ff0066' viewBox='0 0 16 16'%3E%3Cpath d='M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h6zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H5z'/%3E%3Cpath d='M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2z'/%3E%3C/svg%3E" style="height:1em;vertical-align:-.1em;"/>
+                    (or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>).</li>
+                <li>Pick “iPhone SE” or any phone in the list – refresh if needed.</li>
+            </ol>
+            <button onclick="closeHint()">Got it, thanks!</button>
+            </div>
+        </div>
+
         <script src="./script.js"></script>
     </body>
 </html>

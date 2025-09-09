@@ -1,4 +1,14 @@
 // * I will code snap to shape logic again
+
+ /* only show if we are on a desktop & user has never closed it */
+if (!localStorage.getItem('hintSeen') && window.innerWidth > 768){
+    document.getElementById('desktop-hint').style.display = 'flex';
+}
+function closeHint(){
+    document.getElementById('desktop-hint').style.display = 'none';
+    localStorage.setItem('hintSeen','1');
+}
+
 // let createdShapes = [];
 let lassoed = [];
 
@@ -20,12 +30,6 @@ document.body.appendChild(canvas);
 
 const shapebar = document.getElementById("shapebar");
 const lock = document.querySelector(".lock-btn");
-
-// const bbb = document.body.getBoundingClientRect();
-// const body = {
-//     x: bbb.left,
-//     y: bbb.top,
-// };
 
 let shape, shapeBounds;
 let clientX, clientY;
@@ -314,12 +318,12 @@ document.addEventListener("touchstart", (e) => {
         h: e.touches[0].clientY,
     };
 
-    if (shape) {
-        const w = Number(shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p")));
-        const h = Number(shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p")));
-        const x = Number(shape.style.left.slice(0, shape.style.left.indexOf("p")));
-        const y = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 10;
-    }
+    // if (shape) {
+    //     const w = Number(shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p")));
+    //     const h = Number(shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p")));
+    //     const x = Number(shape.style.left.slice(0, shape.style.left.indexOf("p")));
+    //     const y = Number(shape.style.top.slice(0, shape.style.top.indexOf("p"))) + 10;
+    // ,}
 });
 
 document.addEventListener("touchmove", (e) => {
@@ -407,12 +411,14 @@ document.addEventListener("touchmove", (e) => {
         });
     }
     
-    else if (e.target.matches(".shape") && state == "Pan" && shape.dataset.isLock == "false") {
+    // else if (e.target.matches(".shape") && state == "Pan" && shape.dataset.isLock == "false") {
+    else if (state == "Pan" && shape.dataset.isLock == "false") {
+        const rect = shape.getBoundingClientRect();
+
         const touch = e.touches[0] || e.changedTouches[0];
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
         
-        const rect = shape.getBoundingClientRect();
         const width = rect.width;
         const height = rect.height;
         // const width = Number(shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p")));
@@ -421,7 +427,8 @@ document.addEventListener("touchmove", (e) => {
         // const rect = shape.getBoundingClientRect();
         // const snapped = SnapToShape(touch.clientX, touch.clientY, rect.width, rect.height, shape);
 
-        const snapped = SnapToShape(xPos, yPos, width, height, shape, 20);
+        const snapped = SnapToShape(xPos, yPos, width, height, shape);
+        // DrawSnapGuides(snapped.x, snapped.y, width, height, shape); 
 
         shape.style.left = `${snapped.x}px`;
         shape.style.top = `${snapped.y}px`;
@@ -430,8 +437,15 @@ document.addEventListener("touchmove", (e) => {
         const touch = e.touches[0] || e.changedTouches[0];
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
-        shape.style.left = `${xPos}px`;
-        shape.style.top = `${yPos}px`;
+
+        const rect = shape.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+
+        const snapped = SnapToShape(xPos, yPos, width, height, shape);
+        
+        shape.style.left = `${snapped.x}px`;
+        shape.style.top = `${snapped.y}px`;
     }
     else if (e.target.closest(".comment-cont") && state == "Pan") {
         const touch = e.touches[0] || e.changedTouches[0];
@@ -1365,18 +1379,15 @@ function SnapToShape(x, y, width, height, excludeShape, threshold = 10) {
     let snappedY = y;
 
     for (const b of bounds) {
-        // Horizontal snapping
+        // Vertical snapping
         if (Math.abs(x - b.left) < threshold) snappedX = b.left;
-        // else if (Math.abs(x + width - b.left) < threshold) snappedX = b.left - width - 2;
-        else if (Math.abs(x + width - b.right) < threshold) snappedX = b.right - width;
-        else if (Math.abs(y - b.top) < threshold) snappedY = b.top;
-        else if (Math.abs(y + height - b.bottom) < threshold) snappedY = b.bottom - height;
-        // else if (Math.abs(shapeCenterX - b.centerX) < threshold) snappedX = b.centerX - width / 2;
-
-        // // Vertical snapping
-        // if (Math.abs(y - b.bottom) < threshold) snappedY = b.bottom;
-        // else if (Math.abs(y + height - b.top) < threshold) snappedY = b.top - height;
-        // else if (Math.abs(shapeCenterY - b.centerY) < threshold) snappedY = b.centerY - height / 2;
+        if (Math.abs(x + width - b.right) < threshold) snappedX = b.right - width;
+        if (Math.abs(shapeCenterX - b.centerX) < threshold) snappedX = b.centerX - width / 2;
+        
+        // Horizontal snapping
+        if (Math.abs(y - b.top) < threshold) snappedY = b.top;
+        if (Math.abs(y + height - b.bottom) < threshold) snappedY = b.bottom - height;
+        if (Math.abs(shapeCenterY - b.centerY) < threshold) snappedY = b.centerY - height / 2;
     }
 
     return { x: snappedX, y: snappedY };
