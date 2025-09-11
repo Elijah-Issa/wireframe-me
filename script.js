@@ -31,7 +31,7 @@ document.body.appendChild(canvas);
 const shapebar = document.getElementById("shapebar");
 const lock = document.querySelector(".lock-btn");
 
-let shape, shapeBounds;
+let shape, shapeBound;
 let clientX, clientY;
 let relXPos, relYPos;
 let initTouch;
@@ -189,7 +189,7 @@ document.addEventListener("touchstart", (e) => {
         const shapeInfo = e.target.closest(".cont").getBoundingClientRect();
         relXPos = e.touches[0].clientX - shapeInfo.left;
         relYPos = e.touches[0].clientY - shapeInfo.top;
-            
+
         if (shape && shape !== e.target.closest(".cont")) {
             // shape.classList.remove("selected");
             // const delBtn = shape.querySelector(".del-btn");
@@ -211,7 +211,15 @@ document.addEventListener("touchstart", (e) => {
         }
         
         shape = e.target.closest(".cont");
-        shapeBounds = shape.getBoundingClientRect();
+        shapeBound = shape.getBoundingClientRect();
+        // const shapeX = shape.style.left.slice(0, shape.style.left.indexOf("p"));
+        // const shapeY = shape.style.top.slice(0, shape.style.top.indexOf("p"));
+        const x = shapeBound.left;
+        const y = shapeBound.top;
+        shape.setAttribute("data-init-x-pos", x);
+        shape.setAttribute("data-init-y-pos", y);
+        // e.target.closest(".cont").dataset.initXPos = Number(e.touchs[0].clientX);
+        // e.target.closest(".con").dataset.initYPos = Number(e.touchs[0].clientY);
         // shape = e.target;
         // cont.classList.add("selected");
     }
@@ -412,23 +420,26 @@ document.addEventListener("touchmove", (e) => {
     }
     
     // else if (e.target.matches(".shape") && state == "Pan" && shape.dataset.isLock == "false") {
-    else if (state == "Pan" && shape.dataset.isLock == "false") {
+    else if (shape && !e.target.matches(".dot") && state == "Pan" && shape.dataset.isLock == "false") {
         const rect = shape.getBoundingClientRect();
 
         const touch = e.touches[0] || e.changedTouches[0];
         let xPos = touch.clientX - relXPos;
         let yPos = touch.clientY - relYPos;
+
+        // const x = touch.clientX - shapeBound.left;
+        // const y = touch.clientY - shapeBound.top;
+        const x = touch.clientX - startX + Number(shape.dataset.initXPos);
+        const y = touch.clientY - startY + Number(shape.dataset.initYPos);
         
+        
+        // shape.style.left = `${x}px`;
+        // shape.style.top = `${y}px`;
+
         const width = rect.width;
         const height = rect.height;
-        // const width = Number(shape.querySelector(".shape").style.width.slice(0, shape.querySelector(".shape").style.width.indexOf("p")));
-        // const height = Number(shape.querySelector(".shape").style.height.slice(0, shape.querySelector(".shape").style.height.indexOf("p")));
-
-        // const rect = shape.getBoundingClientRect();
-        // const snapped = SnapToShape(touch.clientX, touch.clientY, rect.width, rect.height, shape);
-
-        const snapped = SnapToShape(xPos, yPos, width, height, shape);
-        // DrawSnapGuides(snapped.x, snapped.y, width, height, shape); 
+        const snapped = SnapToShape(x, y, width, height, shape);
+        // // DrawSnapGuides(snapped.x, snapped.y, width, height, shape); 
 
         shape.style.left = `${snapped.x}px`;
         shape.style.top = `${snapped.y}px`;
@@ -618,6 +629,11 @@ document.addEventListener("touchend", (e) => {
         outerTempShape = null;
     }
     initTouch = e.touches[0];
+    if (shape) {
+        const rect = shape.getBoundingClientRect();
+        shape.setAttribute("data-init-x-pos", rect.left);
+        shape.setAttribute("data-init-y-pos", rect.top)
+    }
     // lassoed.length = 0;
     // lassoed = [];
 });
@@ -886,6 +902,8 @@ function CreateRect(width, height, left, top) {
     cont.style.top = `${top}px`;
     cont.style.zIndex = "0";
     cont.setAttribute("data-is-lock", "false");
+    cont.setAttribute("data-init-x-pos", "null");
+    cont.setAttribute("data-init-y-pos", "null");
     
     cont.innerHTML += `
         <div class="shape-lock-icon">
