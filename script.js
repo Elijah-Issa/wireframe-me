@@ -12,10 +12,6 @@ function closeHint(){
 // let createdShapes = [];
 let lassoed = [];
 
-document.addEventListener("keydown", e => {
-    if (e.key == "q") console.log(createdShapes);
-});
-
 const canvas = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 Object.assign(canvas.style, {
   position: 'fixed',
@@ -657,8 +653,8 @@ document.addEventListener("click", (e) => {
         if (!shape) return;
 
         e.target.closest(".comment-x-icon").style.display = "none";
-        shape.querySelector(".inner-comment-wrapper").style.display = "none";
-        shape.dataset.commentState = "closed";
+        e.target.closest(".comment-cont").querySelector(".inner-comment-wrapper").style.display = "none";
+        e.target.dataset.commentState = "closed";
     }
     else if (e.target.matches(".comment-icon-wrapper") || e.target.closest(".comment-icon-wrapper")) {
         const comment = e.target.closest(".comment-icon-wrapper");
@@ -898,9 +894,10 @@ function CreateRect(width, height, left, top) {
     cont.style.width = "fit-content";
     cont.style.height = "fit-content";
     cont.style.position = "absolute";
-    cont.style.left = `${left}px`;
-    cont.style.top = `${top}px`;
+    cont.style.left = `${left - 16}px`;
+    cont.style.top = `${top - 16}px`;
     cont.style.zIndex = "0";
+    // cont.style.border = "2px dashed red";
     cont.setAttribute("data-is-lock", "false");
     cont.setAttribute("data-init-x-pos", "null");
     cont.setAttribute("data-init-y-pos", "null");
@@ -980,8 +977,8 @@ function CreateCircle(width, height, left, top) {
     cont.style.width = "fit-content";
     cont.style.height = "fit-content";
     cont.style.position = "absolute";
-    cont.style.left = `${left}px`;
-    cont.style.top = `${top}px`;
+    cont.style.left = `${left - 16}px`;
+    cont.style.top = `${top - 16}px`;
     cont.style.zIndex = "0";
     cont.setAttribute("data-is-lock", "false");
 
@@ -1060,8 +1057,8 @@ function CreateText(svgWidth, strokeWidth, viewBox, d, left, top) {
     cont.style.width = "fit-content";
     cont.style.height = "fit-content";
     cont.style.position = "absolute";
-    cont.style.left = `${left}px`;
-    cont.style.top = `${top}px`;
+    cont.style.left = `${left - 16}px`;
+    cont.style.top = `${top - 16}px`;
     cont.style.zIndex = "0";
     cont.setAttribute("data-is-lock", "false");
 
